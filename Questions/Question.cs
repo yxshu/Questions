@@ -10,6 +10,7 @@ namespace GetQuestonsFromWordToExcel
     class Question
     {
         private int id;
+        private int sn;
         private string chapter;
         private string node;
         private string title;
@@ -32,7 +33,11 @@ namespace GetQuestonsFromWordToExcel
                 id = value;
             }
         }
-
+       public int SN
+        {
+            get { return sn; }
+            set { sn = value; }
+        }
         public string Chapter
         {
             get

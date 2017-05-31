@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GetQuestonsFromWordToExcel
+namespace Questions
 {
     class Question
     {
@@ -20,7 +20,9 @@ namespace GetQuestonsFromWordToExcel
         private string choosed;
         private string answer;
         private string explain;
-
+        /// <summary>
+        /// 试题编号
+        /// </summary>
         public int Id
         {
             get
@@ -33,11 +35,17 @@ namespace GetQuestonsFromWordToExcel
                 id = value;
             }
         }
+        /// <summary>
+        /// 试题原编号
+        /// </summary>
        public int SN
         {
             get { return sn; }
             set { sn = value; }
         }
+        /// <summary>
+        /// 章标题
+        /// </summary>
         public string Chapter
         {
             get
@@ -50,7 +58,9 @@ namespace GetQuestonsFromWordToExcel
                 chapter = value;
             }
         }
-
+        /// <summary>
+        /// 节标题
+        /// </summary>
         public string Node
         {
             get
@@ -63,7 +73,9 @@ namespace GetQuestonsFromWordToExcel
                 node = value;
             }
         }
-
+        /// <summary>
+        /// 试题题干
+        /// </summary>
         public string Title
         {
             get
@@ -76,7 +88,9 @@ namespace GetQuestonsFromWordToExcel
                 title = value;
             }
         }
-
+        /// <summary>
+        /// 选项A
+        /// </summary>
         public string Choosea
         {
             get
@@ -89,7 +103,9 @@ namespace GetQuestonsFromWordToExcel
                 choosea = value;
             }
         }
-
+        /// <summary>
+        /// 选项B
+        /// </summary>
         public string Chooseb
         {
             get
@@ -102,7 +118,9 @@ namespace GetQuestonsFromWordToExcel
                 chooseb = value;
             }
         }
-
+        /// <summary>
+        /// 选项C
+        /// </summary>
         public string Choosec
         {
             get
@@ -115,7 +133,9 @@ namespace GetQuestonsFromWordToExcel
                 choosec = value;
             }
         }
-
+        /// <summary>
+        /// 选项D
+        /// </summary>
         public string Choosed
         {
             get
@@ -128,7 +148,9 @@ namespace GetQuestonsFromWordToExcel
                 choosed = value;
             }
         }
-
+        /// <summary>
+        /// 参考答案
+        /// </summary>
         public string Answer
         {
             get
@@ -141,7 +163,9 @@ namespace GetQuestonsFromWordToExcel
                 answer = value;
             }
         }
-
+        /// <summary>
+        /// 解析
+        /// </summary>
         public string Explain
         {
             get

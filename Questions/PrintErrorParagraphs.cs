@@ -13,6 +13,9 @@ namespace Questions
         public PrintErrorParagraphs(XWPFParagraph p) {
             para = p;
         }
+        public int PrintErrorID() { 
+        
+        }
     }
 }
 

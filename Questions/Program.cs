@@ -53,12 +53,13 @@ namespace Questions
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow);
                     int paragraphsCount = doc.Paragraphs.Count;
-                    for (int i = 1; i < paragraphsCount;i++ )
+                    for (int i = 299; i < paragraphsCount;i++ )
                     {
+                        Console.WriteLine(i);
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
                         string text = para.Text.Trim();
-                        if (string.IsNullOrEmpty(text)) return;
+                        if (string.IsNullOrEmpty(text)) continue;
                         if (regChapter.IsMatch(text))//章标题
                         {
                             expstar = false;
@@ -134,7 +135,7 @@ namespace Questions
                         }
                         Console.ResetColor();
                         Console.WriteLine();
-                        //Thread.Sleep(500);
+                        Thread.Sleep(100);
                     }
                     //}
                 }

@@ -9,7 +9,8 @@ namespace Questions
 {
     class Question
     {
-        private int id;
+        private int allid;
+        private string id;
         private int sn;
         private string chapter;
         private string node;
@@ -20,10 +21,15 @@ namespace Questions
         private string choosed;
         private string answer;
         private string explain;
+        public int AllID
+        {
+            get { return allid; }
+            set { allid = value; }
+        }
         /// <summary>
         /// 试题编号
         /// </summary>
-        public int Id
+        public string Id
         {
             get
             {
@@ -38,7 +44,7 @@ namespace Questions
         /// <summary>
         /// 试题原编号
         /// </summary>
-       public int SN
+        public int SN
         {
             get { return sn; }
             set { sn = value; }

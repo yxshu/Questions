@@ -4,6 +4,7 @@ using NPOI.XWPF.UserModel;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Word = Microsoft.Office.Interop.Word;
+using System.Collections.Generic;
 
 namespace Questions
 {
@@ -24,7 +25,11 @@ namespace Questions
             
             bool expstar = false;//解析开始标记
             string chapter = string.Empty;//章标题
+            int chapterID = 0;//章序号
             string node = string.Empty;//节标题
+            int nodeID = 0;//节序号
+            int questionID = 0;//试题序号
+            int questionAllID = 0;//试题的总序号
             Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
             Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
             Regex regexpstar = new Regex("^参考答案");//参考答案开头
@@ -33,6 +38,7 @@ namespace Questions
             Regex regNode = new Regex("^第[一二三四五六七八九十]{1,3}节", RegexOptions.IgnoreCase);//节标题
             Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
+            List<Question> list = new List<Question>();
             foreach (string str in documents)
             {
                 string path = @"d:/" + str;
@@ -60,11 +66,16 @@ namespace Questions
                         {
                             expstar = false;
                             chapter = text;
+                            chapterID++;
+                            nodeID = 0;
+                            questionID = 0;
                            // writer.WriteLine(text);
                             Console.WriteLine("章标题： " + chapter);
                         }
                         else if (regNode.IsMatch(text))//节标题
                         {
+                            nodeID++;
+                            questionID = 0;
                             expstar = false;
                             node = text;
                            // writer.WriteLine(node);
@@ -82,6 +93,23 @@ namespace Questions
                             {
                                 if (regA.Split(text).Length == 5)//有四个选项
                                 {
+                                    string[] strSplit = regA.Split(text);
+                                    questionID++;
+                                    questionAllID++;
+                                    Question question = new Question();
+                                    question.Chapter = chapter;
+                                    question.Node = node;
+                                    question.AllID = questionAllID;
+                                    question.Id = chapterID+"_"+nodeID+"_"+questionID;
+                                    question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);
+                                    question.Title = regNO.Replace(strSplit[0],"");
+                                    question.Choosea = strSplit[1];
+                                    question.Chooseb = strSplit[2];
+                                    question.Choosec = strSplit[3];
+                                    question.Choosed = strSplit[4];
+                                    question.Answer = null;
+                                    question.Explain = null;
+                                    list.Add(question);
                                     Console.WriteLine("四个选项试题： " + text);
 
                                 }

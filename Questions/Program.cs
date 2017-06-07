@@ -11,8 +11,8 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/avoidcollision-wufei.docx" };
-            //"QuestionLibraries/avoidcollision-wufei.docx"  ,
+            string[] documents = new string[] { 
+            "QuestionLibraries/avoidcollision-wufei.docx"  //,
             // "QuestionLibraries/certificate-yuxiangshu.docx",
             //"QuestionLibraries/english-xiangwei.docx",
             //"QuestionLibraries/equipment-hedetao.docx",
@@ -20,8 +20,8 @@ namespace Questions
             //"QuestionLibraries/management-lizhite.docx",
             //"QuestionLibraries/navigation-hedetao.docx",
             //"QuestionLibraries/ocean-hedetao.docx"
-
-            int mark = 0;//标记
+            };
+            
             bool expstar = false;//解析开始标记
             string chapter = string.Empty;//章标题
             string node = string.Empty;//节标题
@@ -31,7 +31,7 @@ namespace Questions
             Regex regexp = new Regex("^[0-9]+[\\.|、][ABCDabcd]{1}[\\.|、|。]");//解释
             Regex regChapter = new Regex("^第[一二三四五六七八九十]{1,3}章", RegexOptions.IgnoreCase);//章标题
             Regex regNode = new Regex("^第[一二三四五六七八九十]{1,3}节", RegexOptions.IgnoreCase);//节标题
-            Regex regxhx = new Regex("[_]{4,10}", RegexOptions.IgnoreCase);//下划线
+            Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
             foreach (string str in documents)
             {
@@ -40,9 +40,6 @@ namespace Questions
                 writer.WriteLine(path);
                 try
                 {
-                    // using (FileStream stream = File.OpenRead(path))
-                    // {
-                    //  XWPFDocument doc = new XWPFDocument(stream);
                     Word.Application app = new Word.Application();
                     Word.Document doc = null;
                     object unknow = Type.Missing;
@@ -53,9 +50,8 @@ namespace Questions
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow);
                     int paragraphsCount = doc.Paragraphs.Count;
-                    for (int i = 299; i < paragraphsCount; i++)
+                    for (int i = 1; i < paragraphsCount; i++)
                     {
-                        Console.WriteLine(i);
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
                         string text = para.Text.Trim();
@@ -64,20 +60,14 @@ namespace Questions
                         {
                             expstar = false;
                             chapter = text;
-                            Console.WriteLine(mark);
-                            writer.WriteLine(mark);
-                            mark = 0;
-                            writer.WriteLine(text);
+                           // writer.WriteLine(text);
                             Console.WriteLine("章标题： " + chapter);
                         }
                         else if (regNode.IsMatch(text))//节标题
                         {
                             expstar = false;
                             node = text;
-                            Console.WriteLine(mark);
-                            writer.WriteLine(mark);
-                            mark = 0;
-                            writer.WriteLine(node);
+                           // writer.WriteLine(node);
                             Console.WriteLine("节标题： " + node);
                         }
                         else if (regexpstar.IsMatch(text))//参考答案开始
@@ -92,19 +82,17 @@ namespace Questions
                             {
                                 if (regA.Split(text).Length == 5)//有四个选项
                                 {
-                                    mark++;
                                     Console.WriteLine("四个选项试题： " + text);
 
                                 }
                                 else if (regA.Split(text).Length == 4)//有三个选项
                                 {
-                                    mark++;
                                     Console.WriteLine("三个选项试题： " + text);
+                                    Console.ReadLine();
                                 }
                                 else//其它， 不知道是什么情况，有可能是判断题
                                 {
-                                    mark++;
-                                    writer.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
+                                   // writer.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
                                     Console.ReadLine();
@@ -118,7 +106,7 @@ namespace Questions
                                 }
                                 else//错误部分
                                 {
-                                    writer.WriteLine("错误：数字开头无下划线 - " + text);
+                                    //writer.WriteLine("错误：数字开头无下划线 - " + text);
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.WriteLine("错误：数字开头无下划线 - " + text);
                                     Console.ReadLine();
@@ -128,20 +116,20 @@ namespace Questions
                         }
                         else
                         {
-                            writer.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
+                           // writer.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
                             Console.ReadLine();
                         }
                         Console.ResetColor();
                         Console.WriteLine();
-                        Thread.Sleep(100);
+                        //Thread.Sleep(100);
                     }
-                    //}
+                    //app.Documents.Close();
                 }
                 catch (Exception ex)
                 {
-                    writer.WriteLine(ex.Message);
+                   // writer.WriteLine(ex.Message);
                     Console.WriteLine(ex.Message);
                     Console.ReadLine();
                 }

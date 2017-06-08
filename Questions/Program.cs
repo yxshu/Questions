@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
-using NPOI.XWPF.UserModel;
+//using NPOI.XWPF.UserModel;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Word = Microsoft.Office.Interop.Word;
 using System.Collections.Generic;
 using NPOI.SS.UserModel;
-using NPOI.HSSF.UserModel;
+//using NPOI.HSSF.UserModel;
 using System.Reflection;
 
 namespace Questions
@@ -60,7 +60,8 @@ namespace Questions
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow);
                     int paragraphsCount = doc.Paragraphs.Count;
-                    for (int i = 1; i < paragraphsCount; i++)
+                    //for (int i = 1; i <= paragraphsCount; i++)
+                    for (int i = 1; i < 100; i++)
                     {
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
@@ -199,7 +200,7 @@ namespace Questions
                     writer.Close();
                 }
             }
-            questiontoexcel(list, "d://00.xlsx");
+            questiontoexcel(list, "d://00.xls");
             Console.WriteLine("完成");
             Console.ReadLine();
         }
@@ -235,7 +236,7 @@ namespace Questions
         {
             FileStream filestream = new FileStream(path, FileMode.Append);
             Question question = new Question();
-            IWorkbook workbook = new HSSFWorkbook();//创建Workbook对象  
+            IWorkbook workbook = new NPOI.HSSF.UserModel.HSSFWorkbook();//创建Workbook对象  
             ISheet sheet = workbook.CreateSheet("Sheet1");//创建工作表  
             IRow headerRow = sheet.CreateRow(0);//在工作表中添加首行 
             PropertyInfo[] propertyinfo = question.GetType().GetProperties();
@@ -261,10 +262,20 @@ namespace Questions
                 IRow datarow = sheet.CreateRow(rownumber + 1);
                 for (int i = 0; i < q.GetType().GetProperties().Length; i++)
                 {
-                    datarow.CreateCell(i).SetCellValue(q.GetType().GetProperties()[i].GetValue(q).ToString());
+                    ICell c = datarow.CreateCell(i);
+                    c.SetCellValue("");
+                    if (q.GetType().GetProperties()[i].GetValue(q) != null)
+                    {
+                        c.SetCellValue(q.GetType().GetProperties()[i].GetValue(q).ToString());
+                    }
                 }
             }
-            using (filestream) {
+            for (int i = 0; i < headerRow.Cells.Count; i++)
+            {
+                sheet.AutoSizeColumn(i);
+            }
+            using (filestream)
+            {
                 workbook.Write(filestream);
                 filestream.Flush();
                 filestream.Close();

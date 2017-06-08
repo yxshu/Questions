@@ -5,6 +5,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Word = Microsoft.Office.Interop.Word;
 using System.Collections.Generic;
+using NPOI.SS.UserModel;
+using NPOI.HSSF.UserModel;
+using System.Reflection;
 
 namespace Questions
 {
@@ -22,8 +25,9 @@ namespace Questions
             //"QuestionLibraries/navigation-hedetao.docx",
             //"QuestionLibraries/ocean-hedetao.docx"
             };
-            
+
             bool expstar = false;//解析开始标记
+            string subject = "船舶操纵与避碰";
             string chapter = string.Empty;//章标题
             int chapterID = 0;//章序号
             string node = string.Empty;//节标题
@@ -69,7 +73,6 @@ namespace Questions
                             chapterID++;
                             nodeID = 0;
                             questionID = 0;
-                           // writer.WriteLine(text);
                             Console.WriteLine("章标题： " + chapter);
                         }
                         else if (regNode.IsMatch(text))//节标题
@@ -78,7 +81,6 @@ namespace Questions
                             questionID = 0;
                             expstar = false;
                             node = text;
-                           // writer.WriteLine(node);
                             Console.WriteLine("节标题： " + node);
                         }
                         else if (regexpstar.IsMatch(text))//参考答案开始
@@ -97,20 +99,22 @@ namespace Questions
                                     questionID++;
                                     questionAllID++;
                                     Question question = new Question();
+                                    question.Subject = subject;
                                     question.Chapter = chapter;
                                     question.Node = node;
                                     question.AllID = questionAllID;
-                                    question.Id = chapterID+"_"+nodeID+"_"+questionID;
+                                    question.Id = chapterID + "_" + nodeID + "_" + questionID;
                                     question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);
-                                    question.Title = regNO.Replace(strSplit[0],"");
+                                    question.SNID = chapterID + "_" + nodeID + "_" + question.SN;
+                                    question.Title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
                                     question.Choosea = strSplit[1];
                                     question.Chooseb = strSplit[2];
                                     question.Choosec = strSplit[3];
                                     question.Choosed = strSplit[4];
                                     question.Answer = null;
                                     question.Explain = null;
+                                    printQuesiton(question);
                                     list.Add(question);
-                                    Console.WriteLine("四个选项试题： " + text);
 
                                 }
                                 else if (regA.Split(text).Length == 4)//有三个选项
@@ -120,7 +124,7 @@ namespace Questions
                                 }
                                 else//其它， 不知道是什么情况，有可能是判断题
                                 {
-                                   // writer.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
+                                    // writer.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
                                     Console.ReadLine();
@@ -130,7 +134,35 @@ namespace Questions
                             {
                                 if (regexp.IsMatch(text) && expstar)//参考答案与解析
                                 {
-                                    Console.WriteLine("参考答案: " + text);
+                                    string tou = regexp.Match(text).Value;
+                                    string exp = text.Substring(tou.Length).Trim();
+                                    Regex reg = new Regex(@"同第[0-9]+题\p{P}");
+                                    if (reg.IsMatch(exp))
+                                    {
+                                        int sameNo = Int32.Parse(new Regex("[0-9]+").Match(reg.Match(exp).Value).Value);
+                                        foreach (Question q in list)
+                                        {
+                                            if (q.SNID == chapterID + "_" + nodeID + "_" + sameNo)
+                                            {
+                                                exp = reg.Replace(exp, q.Explain);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    string No = chapterID + "_" + nodeID + "_" + new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(tou).Value;
+                                    string answer = new Regex("[ABCD]{1}", RegexOptions.IgnoreCase).Match(tou).Value;
+                                    foreach (Question q in list)
+                                    {
+                                        if (q.SNID == No)
+                                        {
+                                            q.Answer = answer;
+                                            q.Explain = exp;
+                                            Console.WriteLine("头子：" + tou);
+                                            printQuesiton(q);
+                                            break;
+                                        }
+                                    }
+                                    //Console.WriteLine("参考答案: " + text);
                                 }
                                 else//错误部分
                                 {
@@ -144,20 +176,20 @@ namespace Questions
                         }
                         else
                         {
-                           // writer.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
+                            // writer.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
                             Console.ReadLine();
                         }
                         Console.ResetColor();
                         Console.WriteLine();
-                        //Thread.Sleep(100);
+                        //Thread.Sleep(1000);
                     }
                     //app.Documents.Close();
                 }
                 catch (Exception ex)
                 {
-                   // writer.WriteLine(ex.Message);
+                    // writer.WriteLine(ex.Message);
                     Console.WriteLine(ex.Message);
                     Console.ReadLine();
                 }
@@ -167,8 +199,76 @@ namespace Questions
                     writer.Close();
                 }
             }
+            questiontoexcel(list, "d://00.xlsx");
             Console.WriteLine("完成");
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// 打印出试题对象
+        /// </summary>
+        /// <param name="question">试题对象</param>
+        public static void printQuesiton(Question question)
+        {
+            Console.WriteLine("总序号：" + question.AllID);
+            Console.WriteLine("试题编号：" + question.Id);
+            Console.WriteLine("原编号：" + question.SN);
+            Console.WriteLine("章节+原编号:" + question.SNID);
+            Console.WriteLine("科目：" + question.Subject);
+            Console.WriteLine("章标题：" + question.Chapter);
+            Console.WriteLine("节标题：" + question.Node);
+            Console.WriteLine("试题：" + question.Title);
+            Console.WriteLine("选项A:" + question.Choosea);
+            Console.WriteLine("选项B:" + question.Chooseb);
+            Console.WriteLine("选项C:" + question.Choosec);
+            Console.WriteLine("选项D:" + question.Choosed);
+            Console.WriteLine("参考答案：" + question.Answer);
+            Console.WriteLine("解析：" + question.Explain);
+            Console.WriteLine();
+        }
+        /// <summary>
+        /// 将试题填充到EXCEL中
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="path"></param>
+        public static void questiontoexcel(List<Question> list, string path)
+        {
+            FileStream filestream = new FileStream(path, FileMode.Append);
+            Question question = new Question();
+            IWorkbook workbook = new HSSFWorkbook();//创建Workbook对象  
+            ISheet sheet = workbook.CreateSheet("Sheet1");//创建工作表  
+            IRow headerRow = sheet.CreateRow(0);//在工作表中添加首行 
+            PropertyInfo[] propertyinfo = question.GetType().GetProperties();
+            string[] headerRowName = new string[propertyinfo.Length];
+            for (int i = 0; i < propertyinfo.Length; i++)
+            {
+                headerRowName[i] = propertyinfo[i].Name;
+            }
+            ICellStyle style = workbook.CreateCellStyle();
+            style.Alignment = HorizontalAlignment.Center;//设置单元格的样式：水平对齐居中
+            IFont font = workbook.CreateFont();//新建一个字体样式对象
+            font.Boldweight = short.MaxValue;//设置字体加粗样式
+            style.SetFont(font);//使用SetFont方法将字体样式添加到单元格样式中
+            for (int i = 0; i < headerRowName.Length; i++)
+            {
+                NPOI.SS.UserModel.ICell cell = headerRow.CreateCell(i);
+                cell.SetCellValue(headerRowName[i]);
+                cell.CellStyle = style;
+            }
+            foreach (Question q in list)
+            {
+                int rownumber = sheet.LastRowNum;
+                IRow datarow = sheet.CreateRow(rownumber + 1);
+                for (int i = 0; i < q.GetType().GetProperties().Length; i++)
+                {
+                    datarow.CreateCell(i).SetCellValue(q.GetType().GetProperties()[i].GetValue(q).ToString());
+                }
+            }
+            using (filestream) {
+                workbook.Write(filestream);
+                filestream.Flush();
+                filestream.Close();
+            }
         }
     }
 }

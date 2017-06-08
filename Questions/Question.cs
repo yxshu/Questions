@@ -12,6 +12,10 @@ namespace Questions
         private int allid;
         private string id;
         private int sn;
+        private string snID;
+        private string subject;
+
+
         private string chapter;
         private string node;
         private string title;
@@ -48,6 +52,21 @@ namespace Questions
         {
             get { return sn; }
             set { sn = value; }
+        }
+        /// <summary>
+        /// 试题原编号加章节编号
+        /// </summary>
+        public string SNID {
+            get { return snID; }
+            set { snID = value; }
+        }
+        /// <summary>
+        /// 科目
+        /// </summary>
+        public string Subject
+        {
+            get { return subject; }
+            set { subject = value; }
         }
         /// <summary>
         /// 章标题

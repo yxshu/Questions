@@ -16,10 +16,10 @@ namespace Questions
         static void Main(string[] args)
         {
             string[] documents = new string[] { 
-            "QuestionLibraries/avoidcollision-wufei.docx"  //,
+            //"QuestionLibraries/avoidcollision-wufei.docx"  ,
             // "QuestionLibraries/certificate-yuxiangshu.docx",
             //"QuestionLibraries/english-xiangwei.docx",
-            //"QuestionLibraries/equipment-hedetao.docx",
+            "QuestionLibraries/equipment-hedetao.docx"//,
             //"QuestionLibraries/instruction-yuxiangshu.docx",
             //"QuestionLibraries/management-lizhite.docx",
             //"QuestionLibraries/navigation-hedetao.docx",
@@ -60,8 +60,8 @@ namespace Questions
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow);
                     int paragraphsCount = doc.Paragraphs.Count;
-                    //for (int i = 1; i <= paragraphsCount; i++)
-                    for (int i = 1; i < 100; i++)
+                    for (int i = 1; i <= paragraphsCount; i++)
+                    // for (int i = 1; i < 100; i++)
                     {
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
@@ -187,10 +187,12 @@ namespace Questions
                         //Thread.Sleep(1000);
                     }
                     //app.Documents.Close();
+
+                    questiontoexcel(list, "d://"+str+".xls");
                 }
                 catch (Exception ex)
                 {
-                    // writer.WriteLine(ex.Message);
+                    writer.WriteLine(ex.Message);
                     Console.WriteLine(ex.Message);
                     Console.ReadLine();
                 }
@@ -200,7 +202,6 @@ namespace Questions
                     writer.Close();
                 }
             }
-            questiontoexcel(list, "d://00.xls");
             Console.WriteLine("完成");
             Console.ReadLine();
         }

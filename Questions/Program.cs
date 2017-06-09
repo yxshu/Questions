@@ -157,7 +157,7 @@ namespace Questions
                                         {
                                             if (string.IsNullOrEmpty(q.Answer))
                                             {
-                                                q.Answer = answer;
+                                                q.Answer = answer.ToUpper();
                                             }
                                             else if (q.Answer != answer)
                                             {

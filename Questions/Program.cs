@@ -15,19 +15,10 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { 
-            //"QuestionLibraries/avoidcollision-wufei.docx"  ,
-            // "QuestionLibraries/certificate-yuxiangshu.docx",
-            //"QuestionLibraries/english-xiangwei.docx",
-            "QuestionLibraries/equipment-hedetao.docx"//,
-            //"QuestionLibraries/instruction-yuxiangshu.docx",
-            //"QuestionLibraries/management-lizhite.docx",
-            //"QuestionLibraries/navigation-hedetao.docx",
-            //"QuestionLibraries/ocean-hedetao.docx"
-            };
-
+            string[] documents = new string[] { "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx" };
+            string[] subjects = new string[] { "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)", "船舶操纵与避碰", "船舶管理", "海船船员合格证培训", "航海英语" };
             bool expstar = false;//解析开始标记
-            string subject = "船舶操纵与避碰";
+            string subject = string.Empty;
             string chapter = string.Empty;//章标题
             int chapterID = 0;//章序号
             string node = string.Empty;//节标题
@@ -36,16 +27,19 @@ namespace Questions
             int questionAllID = 0;//试题的总序号
             Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
             Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
-            Regex regexpstar = new Regex("^参考答案");//参考答案开头
-            Regex regexp = new Regex("^[0-9]+[\\.|、][ABCDabcd]{1}[\\.|、|。]");//解释
+            Regex regexpstar = new Regex("^参考答案|答案解析");//参考答案开头
+            Regex regexp = new Regex("^[0-9]+[\\.|、][ABCDabcd]{1}[\\.|、|。]?");//解释
             Regex regChapter = new Regex("^第[一二三四五六七八九十]{1,3}章", RegexOptions.IgnoreCase);//章标题
             Regex regNode = new Regex("^第[一二三四五六七八九十]{1,3}节", RegexOptions.IgnoreCase);//节标题
             Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
             List<Question> list = new List<Question>();
-            foreach (string str in documents)
+            for (int j = 0; j < documents.Length; j++) //(string str in documents)
             {
-                string path = @"d:/" + str;
+                string str = documents[j];
+                subject = subjects[j];
+                string initpath = @"C:\Users\yxshu\Documents\GitHub\Questions\";
+                string path = initpath + str;//C:\Users\yxshu\Documents\GitHub\Questions
                 Console.WriteLine(path);
                 writer.WriteLine(path);
                 try
@@ -65,7 +59,8 @@ namespace Questions
                     {
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
-                        string text = para.Text.Trim();
+                        //string text = para.Text.Trim();
+                        string text = new Regex("\\r\\a").Replace(para.Text, "").Trim();
                         if (string.IsNullOrEmpty(text)) continue;
                         if (regChapter.IsMatch(text))//章标题
                         {
@@ -107,7 +102,10 @@ namespace Questions
                                     question.Id = chapterID + "_" + nodeID + "_" + questionID;
                                     question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);
                                     question.SNID = chapterID + "_" + nodeID + "_" + question.SN;
-                                    question.Title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
+                                    string title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
+                                    if (regxhx.IsMatch(title))
+                                        question.Title = title;
+                                    else { Console.WriteLine("题干部分无下划线。"); Console.ReadLine(); }
                                     question.Choosea = strSplit[1];
                                     question.Chooseb = strSplit[2];
                                     question.Choosec = strSplit[3];
@@ -135,10 +133,11 @@ namespace Questions
                             {
                                 if (regexp.IsMatch(text) && expstar)//参考答案与解析
                                 {
-                                    string tou = regexp.Match(text).Value;
-                                    string exp = text.Substring(tou.Length).Trim();
+
+                                    string tou = regexp.Match(text).Value;//编号和答案
+                                    string exp = text.Substring(tou.Length).Trim();//解析
                                     Regex reg = new Regex(@"同第[0-9]+题\p{P}");
-                                    if (reg.IsMatch(exp))
+                                    if (reg.IsMatch(exp))//解决关于“同第**题”的解析问题
                                     {
                                         int sameNo = Int32.Parse(new Regex("[0-9]+").Match(reg.Match(exp).Value).Value);
                                         foreach (Question q in list)
@@ -150,13 +149,21 @@ namespace Questions
                                             }
                                         }
                                     }
-                                    string No = chapterID + "_" + nodeID + "_" + new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(tou).Value;
-                                    string answer = new Regex("[ABCD]{1}", RegexOptions.IgnoreCase).Match(tou).Value;
+                                    string No = chapterID + "_" + nodeID + "_" + new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(tou).Value;//试题编号（带章节）
+                                    string answer = new Regex("[ABCD]{1}", RegexOptions.IgnoreCase).Match(tou).Value;//试题答案
                                     foreach (Question q in list)
                                     {
                                         if (q.SNID == No)
                                         {
-                                            q.Answer = answer;
+                                            if (string.IsNullOrEmpty(q.Answer))
+                                            {
+                                                q.Answer = answer;
+                                            }
+                                            else if (q.Answer != answer)
+                                            {
+                                                Console.WriteLine("试题参考答案与解析部分答案不同。");
+                                                Console.ReadLine();
+                                            }
                                             q.Explain = exp;
                                             Console.WriteLine("头子：" + tou);
                                             printQuesiton(q);
@@ -184,11 +191,14 @@ namespace Questions
                         }
                         Console.ResetColor();
                         Console.WriteLine();
-                        //Thread.Sleep(1000);
-                    }
-                    //app.Documents.Close();
+                        //Thread.Sleep(1000);//每一个段落结束
+                    }//一本试题结束
 
-                    questiontoexcel(list, "d://"+str+".xls");
+                    app.Documents.Close();
+                    Thread.Sleep(5000);
+                    Console.WriteLine("开始将试题写入到表格中……");
+                    questiontoexcel(list, "d://" + str + ".xls");
+                    Console.WriteLine("试题写入完成，地址：D://{0}.xls", str);
                 }
                 catch (Exception ex)
                 {
@@ -199,10 +209,10 @@ namespace Questions
                 finally
                 {
                     writer.Flush();
-                    writer.Close();
                 }
-            }
-            Console.WriteLine("完成");
+            }//所有试题结束
+            writer.Close();
+            Console.WriteLine("所有写入完成。");
             Console.ReadLine();
         }
 
@@ -228,6 +238,8 @@ namespace Questions
             Console.WriteLine("解析：" + question.Explain);
             Console.WriteLine();
         }
+
+
         /// <summary>
         /// 将试题填充到EXCEL中
         /// </summary>

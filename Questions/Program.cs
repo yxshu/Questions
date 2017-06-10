@@ -15,16 +15,13 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx" };
-            string[] subjects = new string[] { "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)", "船舶操纵与避碰", "船舶管理", "海船船员合格证培训", "航海英语" };
+            string[] documents = new string[] {  "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx","QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx" };
+            string[] subjects = new string[] {  "航海学(航海气象与海洋学)", "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运","航海学(航海地文、天文)", "海船船员合格证培训", "航海英语" };
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
-            int chapterID = 0;//章序号
             string node = string.Empty;//节标题
-            int nodeID = 0;//节序号
-            int questionID = 0;//试题序号
-            int questionAllID = 0;//试题的总序号
+            int questionAllID,questionID,chapterID,nodeID ;//试题的总序号
             Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
             Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
             Regex regexpstar = new Regex("^参考答案|答案解析");//参考答案开头
@@ -36,6 +33,10 @@ namespace Questions
             List<Question> list = new List<Question>();
             for (int j = 0; j < documents.Length; j++) //(string str in documents)
             {
+                questionAllID = 0;
+                questionID = 0;
+                chapterID = 0;
+                nodeID = 0;
                 string str = documents[j];
                 subject = subjects[j];
                 string initpath = @"C:\Users\yxshu\Documents\GitHub\Questions\";
@@ -53,6 +54,9 @@ namespace Questions
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow);
+                    Console.WriteLine("正在加载文件： {0} ", path);
+                    Thread.Sleep(10000);
+
                     int paragraphsCount = doc.Paragraphs.Count;
                     for (int i = 1; i <= paragraphsCount; i++)
                     // for (int i = 1; i < 100; i++)
@@ -98,10 +102,10 @@ namespace Questions
                                     question.Subject = subject;
                                     question.Chapter = chapter;
                                     question.Node = node;
-                                    question.AllID = questionAllID;
-                                    question.Id = chapterID + "_" + nodeID + "_" + questionID;
-                                    question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);
-                                    question.SNID = chapterID + "_" + nodeID + "_" + question.SN;
+                                    question.AllID = questionAllID;//总编号
+                                    question.Id = chapterID + "_" + nodeID + "_" + questionID;//章节+总编号
+                                    question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);//原编号
+                                    question.SNID = chapterID + "_" + nodeID + "_" + question.SN;//章节+原编号
                                     string title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
                                     if (regxhx.IsMatch(title))
                                         question.Title = title;
@@ -110,8 +114,9 @@ namespace Questions
                                     question.Chooseb = strSplit[2];
                                     question.Choosec = strSplit[3];
                                     question.Choosed = strSplit[4];
-                                    question.Answer = null;
-                                    question.Explain = null;
+                                    question.Answer = string.Empty;
+                                    question.Explain = string.Empty;
+                                    question.ImageAddress = string.Empty;
                                     printQuesiton(question);
                                     list.Add(question);
 
@@ -195,8 +200,9 @@ namespace Questions
                     }//一本试题结束
 
                     app.Documents.Close();
+                    Console.WriteLine("文件正在关闭。");
                     Thread.Sleep(5000);
-                    Console.WriteLine("开始将试题写入到表格中……");
+                    Console.WriteLine("文件关闭成功，开始将试题写入到表格中……");
                     questiontoexcel(list, "d://" + str + ".xls");
                     Console.WriteLine("试题写入完成，地址：D://{0}.xls", str);
                 }
@@ -222,21 +228,11 @@ namespace Questions
         /// <param name="question">试题对象</param>
         public static void printQuesiton(Question question)
         {
-            Console.WriteLine("总序号：" + question.AllID);
-            Console.WriteLine("试题编号：" + question.Id);
-            Console.WriteLine("原编号：" + question.SN);
-            Console.WriteLine("章节+原编号:" + question.SNID);
-            Console.WriteLine("科目：" + question.Subject);
-            Console.WriteLine("章标题：" + question.Chapter);
-            Console.WriteLine("节标题：" + question.Node);
-            Console.WriteLine("试题：" + question.Title);
-            Console.WriteLine("选项A:" + question.Choosea);
-            Console.WriteLine("选项B:" + question.Chooseb);
-            Console.WriteLine("选项C:" + question.Choosec);
-            Console.WriteLine("选项D:" + question.Choosed);
-            Console.WriteLine("参考答案：" + question.Answer);
-            Console.WriteLine("解析：" + question.Explain);
-            Console.WriteLine();
+            PropertyInfo[] proper = question.GetType().GetProperties();
+            for (int i = 0; i < question.GetType().GetProperties().Length; i++)
+            {
+                Console.WriteLine("{0}:{1}", proper[i].Name, proper[i].GetValue(question).ToString());
+            }
         }
 
 

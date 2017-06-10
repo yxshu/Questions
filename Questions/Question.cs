@@ -14,8 +14,6 @@ namespace Questions
         private int sn;
         private string snID;
         private string subject;
-
-
         private string chapter;
         private string node;
         private string title;
@@ -25,13 +23,17 @@ namespace Questions
         private string choosed;
         private string answer;
         private string explain;
+        private string imageaddress;
+        /// <summary>
+        /// 试题总编号
+        /// </summary>
         public int AllID
         {
             get { return allid; }
             set { allid = value; }
         }
         /// <summary>
-        /// 试题编号
+        /// 试题章节+总编号
         /// </summary>
         public string Id
         {
@@ -54,9 +56,10 @@ namespace Questions
             set { sn = value; }
         }
         /// <summary>
-        /// 试题原编号加章节编号
+        /// 试题章节+原编号
         /// </summary>
-        public string SNID {
+        public string SNID
+        {
             get { return snID; }
             set { snID = value; }
         }
@@ -202,6 +205,14 @@ namespace Questions
             {
                 explain = value;
             }
+        }
+        /// <summary>
+        /// 图片地址
+        /// </summary>
+        public string ImageAddress
+        {
+            get { return imageaddress; }
+            set { imageaddress = value; }
         }
     }
 }

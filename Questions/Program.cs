@@ -60,7 +60,7 @@ namespace Questions
 
                     int paragraphsCount = doc.Paragraphs.Count;
                     for (int i = 1; i <=paragraphsCount ; i++)//
-                     //for (int i = 1; i < 100; i++)
+                    //for (int i = 1; i < 200; i++)
                     {
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
@@ -267,7 +267,7 @@ namespace Questions
                 cell.SetCellValue(headerRowName[i]);
                 cell.CellStyle = style;
             }
-            for (int j = 0; j < list.Count;j++ )
+            for (int j = 0; j < list.Count; j++)
             {
                 Question q = list[j];
                 printQuesiton(q);
@@ -292,6 +292,7 @@ namespace Questions
                     Console.WriteLine("第{0}条数据插入数据库错误，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
                     Console.ReadLine();
                 }
+                Console.WriteLine();
                 Thread.Sleep(200);
             }
             for (int i = 0; i < headerRow.Cells.Count; i++)
@@ -320,11 +321,12 @@ namespace Questions
                 case "B": question.Answer = "2"; break;
                 case "C": question.Answer = "3"; break;
                 case "D": question.Answer = "4"; break;
-                default: Console.ReadLine(); break;
+                default: question.Answer = "0"; break;
             }
             SqlConnection conn = new SqlConnection("Data Source=localhost;Initial Catalog=" + DB + ";Integrated Security=true;");
             conn.Open();
-            string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "')";//@AllID,@C_N_Id,SN,@SNID,@Subj,@Chapter,@Node,@Title,@Choosea,@Chooseb,@Choosec,@Choosed,@Answer,@Explain,@ImageAddress)";
+            string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "')";//
+            // Console.WriteLine(sqlstr);
             SqlCommand command = new SqlCommand(sqlstr, conn);
             try
             {

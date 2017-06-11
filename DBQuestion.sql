@@ -37,7 +37,7 @@ create table ChooseQuestion-----选择题试题表
 		Chooseb varchar(1000) null,-----选项B
 		Choosec varchar(1000) null,-----选项C
 		Choosed varchar(1000) null,-----选项D
-		Answer int not null check(Answer in(1,2,3,4)),-----参考答案
+		Answer int not null check(Answer in(0,1,2,3,4)),-----参考答案
 		Explain varchar(1000) null,-----解析
 		ImageAddress varchar(1000) null----图片地址
 )

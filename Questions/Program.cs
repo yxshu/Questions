@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using NPOI.SS.UserModel;
 //using NPOI.HSSF.UserModel;
 using System.Reflection;
+using System.Data.SqlClient;
 
 namespace Questions
 {
@@ -15,13 +16,13 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] {  "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx","QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx" };
-            string[] subjects = new string[] {  "航海学(航海气象与海洋学)", "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运","航海学(航海地文、天文)", "海船船员合格证培训", "航海英语" };
+            string[] documents = new string[] { "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" };//, "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx"
+            string[] subjects = new string[] { "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" };//, "海船船员合格证培训", "航海英语" 
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
             string node = string.Empty;//节标题
-            int questionAllID,questionID,chapterID,nodeID ;//试题的总序号
+            int questionAllID, questionID, chapterID, nodeID;//试题的总序号
             Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
             Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
             Regex regexpstar = new Regex("^参考答案|答案解析");//参考答案开头
@@ -55,11 +56,11 @@ namespace Questions
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow,
                         ref unknow, ref unknow, ref unknow, ref unknow, ref unknow);
                     Console.WriteLine("正在加载文件： {0} ", path);
-                    Thread.Sleep(10000);
+                    Thread.Sleep(1000);
 
                     int paragraphsCount = doc.Paragraphs.Count;
-                    for (int i = 1; i <= paragraphsCount; i++)
-                    // for (int i = 1; i < 100; i++)
+                    for (int i = 1; i <=paragraphsCount ; i++)//
+                     //for (int i = 1; i < 100; i++)
                     {
                         Word.Range para = doc.Paragraphs[i].Range;
                         para.Select();
@@ -196,15 +197,16 @@ namespace Questions
                         }
                         Console.ResetColor();
                         Console.WriteLine();
-                        //Thread.Sleep(1000);//每一个段落结束
-                    }//一本试题结束
+                        //Thread.Sleep(500);//每一个段落结束
 
+                    }//一本试题结束
                     app.Documents.Close();
                     Console.WriteLine("文件正在关闭。");
-                    Thread.Sleep(5000);
+                    Thread.Sleep(1000);
                     Console.WriteLine("文件关闭成功，开始将试题写入到表格中……");
                     questiontoexcel(list, "d://" + str + ".xls");
                     Console.WriteLine("试题写入完成，地址：D://{0}.xls", str);
+                    list.Clear();
                 }
                 catch (Exception ex)
                 {
@@ -265,8 +267,10 @@ namespace Questions
                 cell.SetCellValue(headerRowName[i]);
                 cell.CellStyle = style;
             }
-            foreach (Question q in list)
+            for (int j = 0; j < list.Count;j++ )
             {
+                Question q = list[j];
+                printQuesiton(q);
                 int rownumber = sheet.LastRowNum;
                 IRow datarow = sheet.CreateRow(rownumber + 1);
                 for (int i = 0; i < q.GetType().GetProperties().Length; i++)
@@ -278,6 +282,17 @@ namespace Questions
                         c.SetCellValue(q.GetType().GetProperties()[i].GetValue(q).ToString());
                     }
                 }
+                Console.WriteLine("第{0}条数据写入表格成功，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
+                if (insertQuestionTODB(q, "Question", "ChooseQuestion") == 1)
+                {
+                    Console.WriteLine("第{0}条数据写入数据库成功，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
+                }
+                else
+                {
+                    Console.WriteLine("第{0}条数据插入数据库错误，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
+                    Console.ReadLine();
+                }
+                Thread.Sleep(200);
             }
             for (int i = 0; i < headerRow.Cells.Count; i++)
             {
@@ -288,6 +303,40 @@ namespace Questions
                 workbook.Write(filestream);
                 filestream.Flush();
                 filestream.Close();
+            }
+        }
+        /// <summary>
+        /// 将试题插入到数据库
+        /// </summary>
+        /// <param name="question"></param>
+        /// <param name="DB"></param>
+        /// <param name="table"></param>
+        /// <returns>返回影响的行数</returns>
+        public static int insertQuestionTODB(Question question, string DB, string table)
+        {
+            switch (question.Answer.ToUpper())
+            {
+                case "A": question.Answer = "1"; break;
+                case "B": question.Answer = "2"; break;
+                case "C": question.Answer = "3"; break;
+                case "D": question.Answer = "4"; break;
+                default: Console.ReadLine(); break;
+            }
+            SqlConnection conn = new SqlConnection("Data Source=localhost;Initial Catalog=" + DB + ";Integrated Security=true;");
+            conn.Open();
+            string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "')";//@AllID,@C_N_Id,SN,@SNID,@Subj,@Chapter,@Node,@Title,@Choosea,@Chooseb,@Choosec,@Choosed,@Answer,@Explain,@ImageAddress)";
+            SqlCommand command = new SqlCommand(sqlstr, conn);
+            try
+            {
+                return command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
             }
         }
     }

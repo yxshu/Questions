@@ -198,7 +198,6 @@ namespace Questions
                         Console.ResetColor();
                         Console.WriteLine();
                         //Thread.Sleep(500);//每一个段落结束
-
                     }//一本试题结束
                     app.Documents.Close();
                     Console.WriteLine("文件正在关闭。");
@@ -293,7 +292,7 @@ namespace Questions
                     Console.ReadLine();
                 }
                 Console.WriteLine();
-                Thread.Sleep(200);
+                //Thread.Sleep(500);
             }
             for (int i = 0; i < headerRow.Cells.Count; i++)
             {
@@ -326,7 +325,7 @@ namespace Questions
             SqlConnection conn = new SqlConnection("Data Source=localhost;Initial Catalog=" + DB + ";Integrated Security=true;");
             conn.Open();
             string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "')";//
-            // Console.WriteLine(sqlstr);
+             Console.WriteLine(sqlstr);
             SqlCommand command = new SqlCommand(sqlstr, conn);
             try
             {

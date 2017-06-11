@@ -32,14 +32,14 @@ create table ChooseQuestion-----选择题试题表
 		Subj varchar(1000)  null,-----科目
 		Chapter varchar(1000)  null,-----章标题
 		Node varchar(1000) null,-----节标题
-		Title varchar(1000) not null,-----题干
-		Choosea varchar(1000) null,-----选项A
-		Chooseb varchar(1000) null,-----选项B
-		Choosec varchar(1000) null,-----选项C
-		Choosed varchar(1000) null,-----选项D
+		Title varchar(8000) not null,-----题干
+		Choosea varchar(8000) null,-----选项A
+		Chooseb varchar(8000) null,-----选项B
+		Choosec varchar(8000) null,-----选项C
+		Choosed varchar(8000) null,-----选项D
 		Answer int not null check(Answer in(0,1,2,3,4)),-----参考答案
-		Explain varchar(1000) null,-----解析
-		ImageAddress varchar(1000) null----图片地址
+		Explain varchar(max) null,-----解析
+		ImageAddress varchar(8000) null----图片地址
 )
 if exists (select*from sysobjects where name='PanduanQuestion')
 drop table PanduanQuestion
@@ -53,8 +53,8 @@ create table PanduanQuestion----判断题试题表
 		Subj varchar(1000)  null,-----科目
 		Chapter varchar(1000)  null,-----章标题
 		Node varchar(1000) null,-----节标题
-		Title nvarchar(1000) not null,-----题干
+		Title varchar(8000) not null,-----题干
 		Answer bit not null,-----参考答案
-		Explain varchar(1000) null,-----解析
-		ImageAddress varchar(1000) null----图片地址
+		Explain varchar(max) null,-----解析
+		ImageAddress varchar(8000) null----图片地址
 )

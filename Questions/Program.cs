@@ -16,8 +16,8 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" };//, "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx"
-            string[] subjects = new string[] { "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" };//, "海船船员合格证培训", "航海英语" 
+            string[] documents = new string[] {  "QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/english-xiangwei.docx" };//,"QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
+            string[] subjects = new string[] { "海船船员合格证培训","航海英语"  };//,  "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
@@ -59,7 +59,7 @@ namespace Questions
                     Thread.Sleep(1000);
 
                     int paragraphsCount = doc.Paragraphs.Count;
-                    for (int i = 1; i <=paragraphsCount ; i++)//
+                    for (int i = 1; i <= paragraphsCount; i++)//
                     //for (int i = 1; i < 200; i++)
                     {
                         Word.Range para = doc.Paragraphs[i].Range;
@@ -111,10 +111,10 @@ namespace Questions
                                     if (regxhx.IsMatch(title))
                                         question.Title = title;
                                     else { Console.WriteLine("题干部分无下划线。"); Console.ReadLine(); }
-                                    question.Choosea = strSplit[1];
-                                    question.Chooseb = strSplit[2];
-                                    question.Choosec = strSplit[3];
-                                    question.Choosed = strSplit[4];
+                                    question.Choosea = strSplit[1].Trim();
+                                    question.Chooseb = strSplit[2].Trim();
+                                    question.Choosec = strSplit[3].Trim();
+                                    question.Choosed = strSplit[4].Trim();
                                     question.Answer = string.Empty;
                                     question.Explain = string.Empty;
                                     question.ImageAddress = string.Empty;
@@ -325,7 +325,7 @@ namespace Questions
             SqlConnection conn = new SqlConnection("Data Source=localhost;Initial Catalog=" + DB + ";Integrated Security=true;");
             conn.Open();
             string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "')";//
-             Console.WriteLine(sqlstr);
+            Console.WriteLine(sqlstr);
             SqlCommand command = new SqlCommand(sqlstr, conn);
             try
             {

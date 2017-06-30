@@ -16,8 +16,8 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] {  "QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/english-xiangwei.docx" };//,"QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
-            string[] subjects = new string[] { "海船船员合格证培训","航海英语"  };//,  "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
+            string[] documents = new string[] {  "QuestionLibraries/english-xiangwei.docx" };//",QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
+            string[] subjects = new string[] { "航海英语"  };//,"海船船员合格证培训","船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题

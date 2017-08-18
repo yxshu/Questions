@@ -59,6 +59,8 @@ namespace Questions
                     Thread.Sleep(1000);
 
                     int paragraphsCount = doc.Paragraphs.Count;
+
+                    //从这里开始检测每一段的内容
                     for (int i = 1; i <= paragraphsCount; i++)//
                     //for (int i = 1; i < 200; i++)
                     {
@@ -66,7 +68,17 @@ namespace Questions
                         para.Select();
                         //string text = para.Text.Trim();
                         string text = new Regex("\\r\\a").Replace(para.Text, "").Trim();
-                        if (string.IsNullOrEmpty(text)) continue;
+                        /***
+                         * 对每一段内容进行如下检测
+                         * 1、是否空行；
+                         * 2、是否是章标题
+                         * 3、是否是节标题
+                         * 4、是否是参考答案开始标识
+                         * 5、是否是数字开头
+                         * 6、其他情况
+                         * 
+                         * ****/
+                        if (string.IsNullOrEmpty(text)) continue;//空行退出
                         if (regChapter.IsMatch(text))//章标题
                         {
                             expstar = false;
@@ -92,6 +104,7 @@ namespace Questions
                         }
                         else if (regNO.IsMatch(text))//数字开头的
                         {
+                            #region 数字开头并且有下划线的，分别检测四个选项，三个选项，其他情况
                             if (regxhx.IsMatch(text))//有下划线的
                             {
                                 if (regA.Split(text).Length == 5)//有四个选项
@@ -134,7 +147,10 @@ namespace Questions
                                     Console.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
                                     Console.ReadLine();
                                 }
-                            }
+                            } 
+                            #endregion
+
+                            #region 数字开头没有下划线的，分别检测参考答案，错误
                             else//无下划线
                             {
                                 if (regexp.IsMatch(text) && expstar)//参考答案与解析
@@ -176,7 +192,7 @@ namespace Questions
                                             break;
                                         }
                                     }
-                                    //Console.WriteLine("参考答案: " + text);
+                                   
                                 }
                                 else//错误部分
                                 {
@@ -186,7 +202,8 @@ namespace Questions
                                     Console.ReadLine();
                                 }
 
-                            }
+                            } 
+                            #endregion
                         }
                         else
                         {
@@ -195,10 +212,11 @@ namespace Questions
                             Console.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
                             Console.ReadLine();
                         }
+
                         Console.ResetColor();
                         Console.WriteLine();
-                        //Thread.Sleep(500);//每一个段落结束
-                    }//一本试题结束
+                    }//段落检测结束，全部循环完，则一本试题结束
+
                     app.Documents.Close();
                     Console.WriteLine("文件正在关闭。");
                     Thread.Sleep(1000);
@@ -238,7 +256,7 @@ namespace Questions
 
 
         /// <summary>
-        /// 将试题填充到EXCEL中
+        /// 将试题填充到EXCEL并写入到数据库
         /// </summary>
         /// <param name="list"></param>
         /// <param name="path"></param>
@@ -292,7 +310,7 @@ namespace Questions
                     Console.ReadLine();
                 }
                 Console.WriteLine();
-                //Thread.Sleep(500);
+
             }
             for (int i = 0; i < headerRow.Cells.Count; i++)
             {
@@ -305,6 +323,7 @@ namespace Questions
                 filestream.Close();
             }
         }
+        
         /// <summary>
         /// 将试题插入到数据库
         /// </summary>

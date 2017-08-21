@@ -23,7 +23,7 @@ namespace Questions
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
             string node = string.Empty;//节标题
-            int questionAllID, questionID, chapterID, nodeID;//试题的总序号
+            int questionAllID, questionID, chapterID, nodeID;//试题的总序号，每章/节内的序号，章序号，节序号
             Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
             Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
             Regex regexpstar = new Regex("^参考答案|答案解析");//参考答案开头
@@ -106,8 +106,9 @@ namespace Questions
                             Console.WriteLine("参考答案开始标记： " + text);
 
                         }
+
                         #region  处理关联题 PASSAGE 1
-                        else if (regglt.IsMatch(text))
+                        else if (regglt.IsMatch(text.ToLower()))
                         {
                             for (int k = i + 1; ; k++)
                             {
@@ -126,7 +127,7 @@ namespace Questions
                                     }
                                     if (star == true)
                                     {
-                                        foreach (Question q in chuliglt(doc, i + 1, k))
+                                        foreach (Question q in chuliglt(doc, i + 1, k, subject, chapter, node, questionAllID, questionID, chapterID, nodeID, regA, regNO, regxhx))
                                         {
                                             list.Add(q);
                                         }
@@ -137,6 +138,7 @@ namespace Questions
                             }
                         }
                         #endregion
+
                         else if (regNO.IsMatch(text))//数字开头的
                         {
                             #region 数字开头并且有下划线的，分别检测四个选项，三个选项，其他情况
@@ -144,32 +146,11 @@ namespace Questions
                             {
                                 if (regA.Split(text).Length == 5)//有四个选项
                                 {
-                                    string[] strSplit = regA.Split(text);
                                     questionID++;
                                     questionAllID++;
-                                    Question question = new Question();
-                                    question.Subject = subject;
-                                    question.Chapter = chapter;
-                                    question.Node = node;
-                                    question.AllID = questionAllID;//总编号
-                                    question.Id = chapterID + "_" + nodeID + "_" + questionID;//章节+总编号
-                                    question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);//原编号
-                                    question.SNID = chapterID + "_" + nodeID + "_" + question.SN;//章节+原编号
-                                    string title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
-                                    if (regxhx.IsMatch(title))
-                                        question.Title = title;
-                                    else { Console.WriteLine("题干部分无下划线。"); Console.ReadLine(); }
-                                    question.Choosea = strSplit[1].Trim();
-                                    question.Chooseb = strSplit[2].Trim();
-                                    question.Choosec = strSplit[3].Trim();
-                                    question.Choosed = strSplit[4].Trim();
-                                    question.Answer = string.Empty;
-                                    question.Explain = string.Empty;
-                                    question.ImageAddress = string.Empty;
-                                    question.Remark = string.Empty;
+                                    Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, regA, regNO, regxhx, text);
                                     printQuesiton(question);
                                     list.Add(question);
-
                                 }
                                 else if (regA.Split(text).Length == 4)//有三个选项
                                 {
@@ -241,7 +222,7 @@ namespace Questions
                             }
                             #endregion
                         }
-                        else
+                        else//错误
                         {
                             // writer.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -278,22 +259,68 @@ namespace Questions
         }
 
         /// <summary>
+        /// 将一行文本填充成一个试题模型
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="chapter"></param>
+        /// <param name="node"></param>
+        /// <param name="questionAllID"></param>
+        /// <param name="questionID"></param>
+        /// <param name="chapterID"></param>
+        /// <param name="nodeID"></param>
+        /// <param name="remark"></param>
+        /// <param name="regA"></param>
+        /// <param name="regNO"></param>
+        /// <param name="regxhx"></param>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Question TextToQuestionModel(string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, string remark, Regex regA, Regex regNO, Regex regxhx, string text)
+        {
+            string[] strSplit = regA.Split(new Regex("\\r\\a").Replace(text, "").Trim());
+            Question question = new Question();
+            question.Subject = subject;
+            question.Chapter = chapter;
+            question.Node = node;
+            question.AllID = questionAllID;//总编号
+            question.Id = chapterID + "_" + nodeID + "_" + questionID;//章节+总编号
+            question.SN = Int32.Parse(new Regex("^[0-9]+", RegexOptions.IgnoreCase).Match(strSplit[0]).Value);//原编号
+            question.SNID = chapterID + "_" + nodeID + "_" + question.SN;//章节+原编号
+            string title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
+            if (regxhx.IsMatch(title))
+                question.Title = title;
+            else { Console.WriteLine("题干部分无下划线。"); Console.ReadLine(); }
+            question.Choosea = strSplit[1].Trim();
+            question.Chooseb = strSplit[2].Trim();
+            question.Choosec = strSplit[3].Trim();
+            question.Choosed = strSplit[4].Trim();
+            question.Answer = string.Empty;
+            question.Explain = string.Empty;
+            question.ImageAddress = string.Empty;
+            question.Remark = remark;
+            return question;
+        }
+
+        /// <summary>
         /// 处理关联试题
         /// </summary>
         /// <param name="doc">试题所在的文章</param>
         /// <param name="p">关联题开始的行号</param>
         /// <param name="k">关联题试题开始的行号</param>
-        private static Question[] chuliglt(Word.Document doc, int p, int k)
+        private static Question[] chuliglt(Word.Document doc, int rownum, int questionrownum, string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, Regex regA, Regex regNO, Regex regxhx)
         {
 
             Question[] question = new Question[4];
             StringBuilder sb = new StringBuilder();
             string remark = string.Empty;
-            for (int i = p; i < k; i++)
+            for (int i = rownum; i < questionrownum; i++)
             {
                 sb.AppendLine(new Regex("\\r\\a").Replace(doc.Paragraphs[i].Range.Text, "").Trim());
             }
             remark = sb.ToString();
+            for (int j = questionrownum, k = 0; j < questionrownum + 4; j++, k++)
+            {
+                question[k] = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, regA, regNO, regxhx, doc.Paragraphs[j].Range.Text);
+            }
             return question;
 
         }
@@ -426,7 +453,7 @@ namespace Questions
         /// <returns></returns>
         public static Boolean isQuestion(string text, Regex[] reg)
         {
-            Boolean istrue = false;
+            Boolean istrue = true;
             for (int i = 0; i < reg.Length; i++)
             {
                 if (!reg[i].IsMatch(text))

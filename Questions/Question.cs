@@ -9,10 +9,10 @@ namespace Questions
 {
     class Question
     {
-        private int allid;
-        private string id;
-        private int sn;
-        private string snID;
+        private int allid;//试题总编号
+        private string id;//章节+总编号
+        private int sn;//试题原编号
+        private string snID;//章节+原编号
         private string subject;
         private string chapter;
         private string node;
@@ -24,6 +24,13 @@ namespace Questions
         private string answer;
         private string explain;
         private string imageaddress;
+        private string remark;
+
+        public string Remark
+        {
+            get { return remark; }
+            set { remark = value; }
+        }
         /// <summary>
         /// 试题总编号
         /// </summary>

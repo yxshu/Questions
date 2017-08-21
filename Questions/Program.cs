@@ -9,6 +9,7 @@ using NPOI.SS.UserModel;
 //using NPOI.HSSF.UserModel;
 using System.Reflection;
 using System.Data.SqlClient;
+using System.Text;
 
 namespace Questions
 {
@@ -16,8 +17,8 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] {  "QuestionLibraries/english-xiangwei.docx" };//",QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
-            string[] subjects = new string[] { "航海英语"  };//,"海船船员合格证培训","船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
+            string[] documents = new string[] { "QuestionLibraries/english-xiangwei.docx" };//",QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
+            string[] subjects = new string[] { "航海英语" };//,"海船船员合格证培训","船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
@@ -30,6 +31,7 @@ namespace Questions
             Regex regChapter = new Regex("^第[一二三四五六七八九十]{1,3}章", RegexOptions.IgnoreCase);//章标题
             Regex regNode = new Regex("^第[一二三四五六七八九十]{1,3}节", RegexOptions.IgnoreCase);//节标题
             Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
+            Regex regglt = new Regex(@"^passage\s*[0-9]{1,4}");//关联题，以passage开头+数字
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
             List<Question> list = new List<Question>();
             for (int j = 0; j < documents.Length; j++) //(string str in documents)
@@ -71,14 +73,16 @@ namespace Questions
                         /***
                          * 对每一段内容进行如下检测
                          * 1、是否空行；
-                         * 2、是否是章标题
-                         * 3、是否是节标题
-                         * 4、是否是参考答案开始标识
-                         * 5、是否是数字开头
+                         * 2、是否是章标题             第？章 开头的标识
+                         * 3、是否是节标题             第？节 开头的标识
+                         * 4、是否是参考答案开始标识   参考答案|答案解析  开头的标识
+                         * 5、关联题检测               以passage 数字  开关的标识
+                         * 5、是否是数字开头           数字.|数字、   开头的标识
                          * 6、其他情况
                          * 
                          * ****/
                         if (string.IsNullOrEmpty(text)) continue;//空行退出
+
                         if (regChapter.IsMatch(text))//章标题
                         {
                             expstar = false;
@@ -102,6 +106,37 @@ namespace Questions
                             Console.WriteLine("参考答案开始标记： " + text);
 
                         }
+                        #region  处理关联题 PASSAGE 1
+                        else if (regglt.IsMatch(text))
+                        {
+                            for (int k = i + 1; ; k++)
+                            {
+                                string newtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k].Range.Text, "").Trim();
+                                if (isQuestion(newtext, new Regex[] { regNO, regxhx, regA }))
+                                {
+                                    bool star = true;
+                                    for (int m = 0; m < 4; m++)
+                                    {
+                                        string strtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k + m].Range.Text, "").Trim();
+                                        if (!isQuestion(strtext, new Regex[] { regNO, regxhx, regA }))
+                                        {
+                                            star = false;
+                                            Console.ReadLine();
+                                        }
+                                    }
+                                    if (star == true)
+                                    {
+                                        foreach (Question q in chuliglt(doc, i + 1, k))
+                                        {
+                                            list.Add(q);
+                                        }
+                                        i = k + 3;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        #endregion
                         else if (regNO.IsMatch(text))//数字开头的
                         {
                             #region 数字开头并且有下划线的，分别检测四个选项，三个选项，其他情况
@@ -131,6 +166,7 @@ namespace Questions
                                     question.Answer = string.Empty;
                                     question.Explain = string.Empty;
                                     question.ImageAddress = string.Empty;
+                                    question.Remark = string.Empty;
                                     printQuesiton(question);
                                     list.Add(question);
 
@@ -147,7 +183,7 @@ namespace Questions
                                     Console.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
                                     Console.ReadLine();
                                 }
-                            } 
+                            }
                             #endregion
 
                             #region 数字开头没有下划线的，分别检测参考答案，错误
@@ -192,7 +228,7 @@ namespace Questions
                                             break;
                                         }
                                     }
-                                   
+
                                 }
                                 else//错误部分
                                 {
@@ -202,7 +238,7 @@ namespace Questions
                                     Console.ReadLine();
                                 }
 
-                            } 
+                            }
                             #endregion
                         }
                         else
@@ -240,6 +276,28 @@ namespace Questions
             Console.WriteLine("所有写入完成。");
             Console.ReadLine();
         }
+
+        /// <summary>
+        /// 处理关联试题
+        /// </summary>
+        /// <param name="doc">试题所在的文章</param>
+        /// <param name="p">关联题开始的行号</param>
+        /// <param name="k">关联题试题开始的行号</param>
+        private static Question[] chuliglt(Word.Document doc, int p, int k)
+        {
+
+            Question[] question = new Question[4];
+            StringBuilder sb = new StringBuilder();
+            string remark = string.Empty;
+            for (int i = p; i < k; i++)
+            {
+                sb.AppendLine(new Regex("\\r\\a").Replace(doc.Paragraphs[i].Range.Text, "").Trim());
+            }
+            remark = sb.ToString();
+            return question;
+
+        }
+
 
         /// <summary>
         /// 打印出试题对象
@@ -323,7 +381,7 @@ namespace Questions
                 filestream.Close();
             }
         }
-        
+
         /// <summary>
         /// 将试题插入到数据库
         /// </summary>
@@ -343,7 +401,7 @@ namespace Questions
             }
             SqlConnection conn = new SqlConnection("Data Source=localhost;Initial Catalog=" + DB + ";Integrated Security=true;");
             conn.Open();
-            string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "')";//
+            string sqlstr = "insert into " + table + " VALUES(" + question.AllID + ",'" + question.Id + "'," + question.SN + ",'" + question.SNID + "','" + question.Subject + "','" + question.Chapter + "','" + question.Node + "','" + question.Title + "','" + question.Choosea + "','" + question.Chooseb + "','" + question.Choosec + "','" + question.Choosed + "'," + Int32.Parse(question.Answer) + ",'" + question.Explain + "','" + question.ImageAddress + "','" + question.Remark + "')";//
             Console.WriteLine(sqlstr);
             SqlCommand command = new SqlCommand(sqlstr, conn);
             try
@@ -358,6 +416,26 @@ namespace Questions
             {
                 conn.Close();
             }
+        }
+
+        /// <summary>
+        /// 检测多个正则表达式
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="reg"></param>
+        /// <returns></returns>
+        public static Boolean isQuestion(string text, Regex[] reg)
+        {
+            Boolean istrue = false;
+            for (int i = 0; i < reg.Length; i++)
+            {
+                if (!reg[i].IsMatch(text))
+                {
+                    istrue = false;
+                    break;
+                }
+            }
+            return istrue;
         }
     }
 }

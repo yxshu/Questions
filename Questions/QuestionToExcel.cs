@@ -24,7 +24,7 @@ namespace Questions
             IWorkbook workbook = new HSSFWorkbook();//创建Workbook对象  
             ISheet sheet = workbook.CreateSheet("Sheet1");//创建工作表  
             IRow headerRow = sheet.CreateRow(0);//在工作表中添加首行  
-            string[] headerRowName = new string[] { "rownumber", "ID", "SN", "章", "节", "试题", "选项A", "选项B", "选项C", "选项D", "答案", "解析" };
+            string[] headerRowName = new string[] { "rownumber", "ID", "SN", "章", "节", "试题", "选项A", "选项B", "选项C", "选项D", "答案", "解析","备注" };
             ICellStyle style = workbook.CreateCellStyle();
             style.Alignment = HorizontalAlignment.Center;//设置单元格的样式：水平对齐居中
             IFont font = workbook.CreateFont();//新建一个字体样式对象
@@ -50,6 +50,7 @@ namespace Questions
             datarow.CreateCell(9).SetCellValue(question.Choosed.Trim());
             datarow.CreateCell(10).SetCellValue(question.Answer.Trim());
             datarow.CreateCell(11).SetCellValue(question.Explain.Trim());
+            datarow.CreateCell(12).SetCellValue(question.Remark.Trim());
             for (int i = 0; i < headerRow.Cells.Count; i++)
             {
                 sheet.AutoSizeColumn(i);

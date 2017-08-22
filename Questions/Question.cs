@@ -26,11 +26,7 @@ namespace Questions
         private string imageaddress;
         private string remark;
 
-        public string Remark
-        {
-            get { return remark; }
-            set { remark = value; }
-        }
+
         /// <summary>
         /// 试题总编号
         /// </summary>
@@ -220,6 +216,14 @@ namespace Questions
         {
             get { return imageaddress; }
             set { imageaddress = value; }
+        }
+        /// <summary>
+        /// 备注说明
+        /// </summary>
+        public string Remark
+        {
+            get { return remark; }
+            set { remark = value; }
         }
     }
 }

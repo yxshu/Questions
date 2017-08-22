@@ -17,7 +17,7 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/english-xiangwei.docx" };//",QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
+            string[] documents = new string[] { "QuestionLibraries/english-xiangwei.docx"};//, "QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
             string[] subjects = new string[] { "航海英语" };//,"海船船员合格证培训","船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
@@ -110,30 +110,40 @@ namespace Questions
                         #region  处理关联题 PASSAGE 1
                         else if (regglt.IsMatch(text.ToLower()))
                         {
+                            List<int> questionrow = new List<int>();//用来装试题行的行号
                             for (int k = i + 1; ; k++)
                             {
+
+                                doc.Paragraphs[k].Range.Select();
+                                if (k - i > 50)
+                                {
+                                    Console.WriteLine("已经读取50行了，这个关联题好像有点问题……");
+                                    Console.ReadLine();
+                                }
                                 string newtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k].Range.Text, "").Trim();
+                                if (string.IsNullOrEmpty(newtext)) continue;
                                 if (isQuestion(newtext, new Regex[] { regNO, regxhx, regA }))
                                 {
-                                    bool star = true;
-                                    for (int m = 0; m < 4; m++)
+                                    questionrow.Add(k);
+                                }
+                                else if (regglt.IsMatch(newtext.ToLower()))
+                                {
+                                    Question question = new Question();
+                                    string remark = string.Empty;
+                                    StringBuilder sb = new StringBuilder();
+                                    for (int x = i + 1; x < questionrow[0] - 1; x++)
                                     {
-                                        string strtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k + m].Range.Text, "").Trim();
-                                        if (!isQuestion(strtext, new Regex[] { regNO, regxhx, regA }))
-                                        {
-                                            star = false;
-                                            Console.ReadLine();
-                                        }
+                                        sb.AppendLine(new Regex("\\r\\a").Replace(doc.Paragraphs[x].Range.Text, "").Trim());
                                     }
-                                    if (star == true)
+                                    remark = sb.ToString();
+                                    foreach (int n in questionrow)
                                     {
-                                        foreach (Question q in chuliglt(doc, i + 1, k, subject, chapter, node, questionAllID, questionID, chapterID, nodeID, regA, regNO, regxhx))
-                                        {
-                                            list.Add(q);
-                                        }
-                                        i = k + 3;
-                                        break;
+                                        question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, regA, regNO, regxhx, doc.Paragraphs[n].Range.Text);
+                                        printQuesiton(question);
+                                        list.Add(question);
                                     }
+                                    i = k - 1;
+                                    break;
                                 }
                             }
                         }
@@ -237,7 +247,7 @@ namespace Questions
                     app.Documents.Close();
                     Console.WriteLine("文件正在关闭。");
                     Thread.Sleep(1000);
-                    Console.WriteLine("文件关闭成功，开始将试题写入到表格中……");
+                    Console.WriteLine("文件关闭成功，开始将试题写入到表格及数据库中……");
                     questiontoexcel(list, "d://" + str + ".xls");
                     Console.WriteLine("试题写入完成，地址：D://{0}.xls", str);
                     list.Clear();
@@ -277,6 +287,12 @@ namespace Questions
         public static Question TextToQuestionModel(string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, string remark, Regex regA, Regex regNO, Regex regxhx, string text)
         {
             string[] strSplit = regA.Split(new Regex("\\r\\a").Replace(text, "").Trim());
+            if (strSplit.Length != 5)
+            {
+                Exception ex = new Exception(text + "试题被折分成" + strSplit.Length + "个部分");
+
+                Console.ReadLine();
+            }
             Question question = new Question();
             question.Subject = subject;
             question.Chapter = chapter;

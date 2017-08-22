@@ -17,7 +17,7 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/english-xiangwei.docx"};//, "QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
+            string[] documents = new string[] { "QuestionLibraries/english-xiangwei.docx" };//, "QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
             string[] subjects = new string[] { "航海英语" };//,"海船船员合格证培训","船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
@@ -115,14 +115,9 @@ namespace Questions
                             {
 
                                 doc.Paragraphs[k].Range.Select();
-                                if (k - i > 50)
-                                {
-                                    Console.WriteLine("已经读取50行了，这个关联题好像有点问题……");
-                                    Console.ReadLine();
-                                }
                                 string newtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k].Range.Text, "").Trim();
                                 if (string.IsNullOrEmpty(newtext)) continue;
-                                if (isQuestion(newtext, new Regex[] { regNO, regxhx, regA }))
+                                if (isQuestion(newtext))
                                 {
                                     questionrow.Add(k);
                                 }
@@ -462,22 +457,22 @@ namespace Questions
         }
 
         /// <summary>
-        /// 检测多个正则表达式
+        /// 检测多个正则表达式,数字开头的，有下划线，并且可以分成五个部分
         /// </summary>
         /// <param name="text"></param>
         /// <param name="reg"></param>
         /// <returns></returns>
-        public static Boolean isQuestion(string text, Regex[] reg)
+        public static Boolean isQuestion(string text)
         {
             Boolean istrue = true;
-            for (int i = 0; i < reg.Length; i++)
+            Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
+            Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干 
+            Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
+            if (!regNO.IsMatch(text) || !regxhx.IsMatch(text) || regA.Split(text).Length != 5)
             {
-                if (!reg[i].IsMatch(text))
-                {
-                    istrue = false;
-                    break;
-                }
+                istrue = false;
             }
+
             return istrue;
         }
     }

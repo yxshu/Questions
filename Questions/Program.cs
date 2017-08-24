@@ -23,6 +23,7 @@ namespace Questions
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
             string node = string.Empty;//节标题
+            string gltmark = "$关联题$";//关联题的标记，放在question.remark的开头，用于后期识别
             int questionAllID, questionID, chapterID, nodeID;//试题的总序号，每章/节内的序号，章序号，节序号
             Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
             Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
@@ -113,7 +114,6 @@ namespace Questions
                             List<int> questionrow = new List<int>();//用来装试题行的行号
                             for (int k = i + 1; ; k++)
                             {
-
                                 doc.Paragraphs[k].Range.Select();
                                 string newtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k].Range.Text, "").Trim();
                                 if (string.IsNullOrEmpty(newtext)) continue;
@@ -121,8 +121,12 @@ namespace Questions
                                 {
                                     questionrow.Add(k);
                                 }
-                                else if (regglt.IsMatch(newtext.ToLower()))
+                                else if (regglt.IsMatch(newtext.ToLower()) || regexp.IsMatch(newtext))
                                 {
+                                    if (regexp.IsMatch(newtext))
+                                    {
+                                        expstar = true;
+                                    }
                                     Question question = new Question();
                                     string remark = string.Empty;
                                     StringBuilder sb = new StringBuilder();
@@ -130,10 +134,12 @@ namespace Questions
                                     {
                                         sb.AppendLine(new Regex("\\r\\a").Replace(doc.Paragraphs[x].Range.Text, "").Trim());
                                     }
-                                    remark = sb.ToString();
+                                    remark = gltmark + sb.ToString();
                                     foreach (int n in questionrow)
                                     {
-                                        question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, regA, regNO, regxhx, doc.Paragraphs[n].Range.Text);
+                                        questionID++;
+                                        questionAllID++;
+                                        question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, regA, regNO, regxhx, new Regex("^[0-9]+", RegexOptions.IgnoreCase).Replace(doc.Paragraphs[n].Range.Text, questionID.ToString()));
                                         printQuesiton(question);
                                         list.Add(question);
                                     }
@@ -159,15 +165,12 @@ namespace Questions
                                 }
                                 else if (regA.Split(text).Length == 4)//有三个选项
                                 {
-                                    Console.WriteLine("三个选项试题： " + text);
-                                    Console.ReadLine();
+                                    consolewrite("三个选项试题：", text);
                                 }
                                 else//其它， 不知道是什么情况，有可能是判断题
                                 {
                                     // writer.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
-                                    Console.ReadLine();
+                                    consolewrite("其他：数字开头，不是三个/四个选项 ", regA.Split(text).Length + "_" + text);
                                 }
                             }
                             #endregion
@@ -230,9 +233,8 @@ namespace Questions
                         else//错误
                         {
                             // writer.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("错误：非章节标题，非数字开头，你是个什么鬼- " + text);
-                            Console.ReadLine();
+                            consolewrite("错误：非章节标题，非数字开头，你是个什么鬼- ", text);
+
                         }
 
                         Console.ResetColor();
@@ -250,8 +252,7 @@ namespace Questions
                 catch (Exception ex)
                 {
                     writer.WriteLine(ex.Message);
-                    Console.WriteLine(ex.Message);
-                    Console.ReadLine();
+                    consolewrite(ex.Message, "");
                 }
                 finally
                 {
@@ -259,8 +260,7 @@ namespace Questions
                 }
             }//所有试题结束
             writer.Close();
-            Console.WriteLine("所有写入完成。");
-            Console.ReadLine();
+            consolewrite("所有写入完成", "");
         }
 
         /// <summary>
@@ -284,9 +284,7 @@ namespace Questions
             string[] strSplit = regA.Split(new Regex("\\r\\a").Replace(text, "").Trim());
             if (strSplit.Length != 5)
             {
-                Exception ex = new Exception(text + "试题被折分成" + strSplit.Length + "个部分");
-
-                Console.ReadLine();
+                consolewrite("试题被拆分成多个部分", strSplit.Length + "------" + text);
             }
             Question question = new Question();
             question.Subject = subject;
@@ -299,7 +297,7 @@ namespace Questions
             string title = regxhx.Replace(regNO.Replace(strSplit[0], ""), "_______");
             if (regxhx.IsMatch(title))
                 question.Title = title;
-            else { Console.WriteLine("题干部分无下划线。"); Console.ReadLine(); }
+            else { consolewrite("题干部分无下划线", ""); }
             question.Choosea = strSplit[1].Trim();
             question.Chooseb = strSplit[2].Trim();
             question.Choosec = strSplit[3].Trim();
@@ -471,9 +469,22 @@ namespace Questions
             if (!regNO.IsMatch(text) || !regxhx.IsMatch(text) || regA.Split(text).Length != 5)
             {
                 istrue = false;
+                //consolewrite("转换成试题模型不成功",text);
             }
-
             return istrue;
+        }
+
+        /// <summary>
+        /// 从控制台打印文体，并等待输入
+        /// </summary>
+        /// <param name="reason">原因</param>
+        /// <param name="message">信息</param>
+        public static void consolewrite(string reason, string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("{0}---{1}", reason, message);
+            Console.ResetColor();
+            Console.ReadLine();
         }
     }
 }

@@ -17,8 +17,8 @@ namespace Questions
     {
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/english-xiangwei.docx" };//, "QuestionLibraries/certificate-yuxiangshu.docx","QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" 
-            string[] subjects = new string[] { "航海英语" };//,"海船船员合格证培训","船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "船舶结构与货运", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" 
+            string[] documents = new string[] { "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" };//"QuestionLibraries/certificate-yuxiangshu.docx", 
+            string[] subjects = new string[] { "船舶结构与货运", "航海英语", "船舶操纵与避碰", "船舶管理", "航海学(航海仪器)", "航海学(航海地文、天文)", "航海学(航海气象与海洋学)" };//"海船船员合格证培训",
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
@@ -41,6 +41,8 @@ namespace Questions
                 questionID = 0;
                 chapterID = 0;
                 nodeID = 0;
+                chapter = string.Empty;
+                node = string.Empty;
                 string str = documents[j];
                 subject = subjects[j];
                 string initpath = @"C:\Users\yxshu\Documents\GitHub\Questions\";
@@ -88,6 +90,7 @@ namespace Questions
                         {
                             expstar = false;
                             chapter = text;
+                            node = string.Empty;
                             chapterID++;
                             nodeID = 0;
                             questionID = 0;

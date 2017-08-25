@@ -39,7 +39,6 @@ namespace Questions
             Regex regglt = new Regex(@"^passage\s*[0-9]{1,4}");//关联题，以passage开头+数字
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
             List<Question> list = new List<Question>();
-            List<Panduan> listpanduan = new List<Panduan>();
             for (int j = 0; j < documents.Length; j++) //(string str in documents)
             {
                 questionAllID = 0;
@@ -177,28 +176,17 @@ namespace Questions
                             {
                                 if (regA.Split(text).Length == 5)//有四个选项
                                 {
-                                    questionID++;
-                                    questionAllID++;
-                                    Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
-                                    printQuesiton(question);
-                                    list.Add(question);
+                                    proceduQuestion(subject, chapter, node, ref questionAllID, ref questionID, chapterID, nodeID, list, text);
                                 }
                                 else if (regA.Split(text).Length == 4)//有三个选项
                                 {
-                                    questionID++;
-                                    questionAllID++;
                                     text += "D、";
-                                    Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
-                                    printQuesiton(question);
-                                    list.Add(question);
+                                    proceduQuestion(subject, chapter, node, ref questionAllID, ref questionID, chapterID, nodeID, list, text);
                                 }
-                                else if (regA.Split(text).Length == 1)//没有选项的
+                                else if (regA.Split(text).Length == 1)//判断题
                                 {
-                                    questionID++;
-                                    questionAllID++;
-                                    Panduan panduan = TextToPandan(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
-                                    printQuesiton(panduan);
-                                    listpanduan.Add(panduan);
+                                    text += "A、 B、 C、 D、";
+                                    proceduQuestion(subject, chapter, node, ref questionAllID, ref questionID, chapterID, nodeID, list, text);
 
                                 }
                                 else//其它， 不知道是什么情况，有可能是判断题
@@ -234,7 +222,7 @@ namespace Questions
                                     string answer = new Regex("[ABCD]{1}", RegexOptions.IgnoreCase).Match(tou).Value;//试题答案
                                     foreach (Question q in list)
                                     {
-                                        if (q.SNID == No)
+                                        if (q.SNID == No && q.Subject == subject)
                                         {
                                             if (string.IsNullOrEmpty(q.Answer))
                                             {
@@ -280,13 +268,8 @@ namespace Questions
                     Thread.Sleep(1000);
                     Console.WriteLine("文件关闭成功，开始将试题写入到表格及数据库中……");
                     questiontoexcel(list, "d://" + str + ".xls");
-                    if (listpanduan.Count > 0)
-                    {
-                        panduantoexcel(listpanduan, "d://" + str + ".xls");
-                    }
                     Console.WriteLine("试题写入完成，地址：D://{0}.xls", str);
                     list.Clear();
-                    listpanduan.Clear();
                 }
                 catch (Exception ex)
                 {
@@ -302,31 +285,18 @@ namespace Questions
             consolewrite("所有写入完成", "");
         }
 
-
-
-        private static void panduantoexcel(List<Panduan> listpanduan, string p)
+        private static void proceduQuestion(string subject, string chapter, string node, ref int questionAllID, ref int questionID, int chapterID, int nodeID, List<Question> list, string text)
         {
-            throw new NotImplementedException();
+            questionID++;
+            questionAllID++;
+            Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
+            printQuesiton(question);
+            list.Add(question);
         }
 
-        /// <summary>
-        /// 将一行文本填充成一个判断题模型
-        /// </summary>
-        /// <param name="subject"></param>
-        /// <param name="chapter"></param>
-        /// <param name="node"></param>
-        /// <param name="questionAllID"></param>
-        /// <param name="questionID"></param>
-        /// <param name="chapterID"></param>
-        /// <param name="nodeID"></param>
-        /// <param name="remark"></param>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public static Panduan TextToPandan(string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, string remark, string text)
-        {
-            Panduan panduan = new Panduan();
-            return panduan;
-        }
+
+
+
         /// <summary>
         /// 将一行文本填充成一个选项题的试题模型
         /// </summary>
@@ -533,21 +503,6 @@ namespace Questions
                 //consolewrite("转换成试题模型不成功",text);
             }
             return istrue;
-        }
-
-        /// <summary>
-        /// 判断一行文本是否是判断题的形式（1、数字开头，2、有下划线，3、按照A|B|C|D分割后，长度为1）
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public static Boolean isPanduan(string text)
-        {
-            Boolean isTrue = true;
-            if (!regNO.IsMatch(text) || !regxhx.IsMatch(text) || regA.Split(text).Length != 1)
-            {
-                isTrue = false;
-            }
-            return isTrue;
         }
 
         /// <summary>

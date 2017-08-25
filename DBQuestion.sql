@@ -55,7 +55,7 @@ create table PanduanQuestion----判断题试题表
 		Chapter varchar(1000)  null,-----章标题
 		Node varchar(1000) null,-----节标题
 		Title varchar(8000) not null,-----题干
-		Answer bit not null,-----参考答案
+		Answer int not null check(Answer in(-1,0,1)),-----参考答案
 		Explain varchar(max) null,-----解析
 		ImageAddress varchar(8000) null,----图片地址
 		Remark varchar(8000) null----备注

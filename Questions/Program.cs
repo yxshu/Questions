@@ -15,26 +15,31 @@ namespace Questions
 {
     class Program
     {
+        static Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
+        static Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
+        static Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/navigation-hedetao.docx","QuestionLibraries/management-lizhite.docx","QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx", "QuestionLibraries/avoidcollision-wufei.docx",  "QuestionLibraries/equipment-hedetao.docx",  "QuestionLibraries/ocean-hedetao.docx" };//"QuestionLibraries/certificate-yuxiangshu.docx", 
-            string[] subjects = new string[] { "航海学(航海地文、天文)","船舶管理",  "船舶结构与货运", "航海英语", "船舶操纵与避碰", "航海学(航海仪器)", "航海学(航海气象与海洋学)" };//"海船船员合格证培训",
+            string[] documents = new string[] { "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" };
+            string[] subjects = new string[] { string.Empty, "航海学(航海地文、天文)", "船舶管理", "船舶结构与货运", "航海英语", "船舶操纵与避碰", "航海学(航海仪器)", "航海学(航海气象与海洋学)" };//
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
             string node = string.Empty;//节标题
             string gltmark = "$关联题$";//关联题的标记，放在question.remark的开头，用于后期识别
             int questionAllID, questionID, chapterID, nodeID;//试题的总序号，每章/节内的序号，章序号，节序号
-            Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
-            Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干
+
+
             Regex regexpstar = new Regex("^参考答案|答案解析");//参考答案开头
             Regex regexp = new Regex("^[0-9]+[\\.|、][ABCDabcd]{1}[\\.|、|。]?");//解释
+            Regex regPain = new Regex("^第[一二三四五六七八九十]{1,3}篇", RegexOptions.IgnoreCase);//篇标题
             Regex regChapter = new Regex("^第[一二三四五六七八九十]{1,3}章", RegexOptions.IgnoreCase);//章标题
             Regex regNode = new Regex("^第[一二三四五六七八九十]{1,3}节", RegexOptions.IgnoreCase);//节标题
-            Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
+
             Regex regglt = new Regex(@"^passage\s*[0-9]{1,4}");//关联题，以passage开头+数字
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
             List<Question> list = new List<Question>();
+            List<Panduan> listpanduan = new List<Panduan>();
             for (int j = 0; j < documents.Length; j++) //(string str in documents)
             {
                 questionAllID = 0;
@@ -44,7 +49,10 @@ namespace Questions
                 chapter = string.Empty;
                 node = string.Empty;
                 string str = documents[j];
-                subject = subjects[j];
+                if (!string.IsNullOrEmpty(documents[j]))
+                {
+                    subject = subjects[j];
+                }
                 string initpath = @"C:\Users\yxshu\Documents\GitHub\Questions\";
                 string path = initpath + str;//C:\Users\yxshu\Documents\GitHub\Questions
                 Console.WriteLine(path);
@@ -85,8 +93,17 @@ namespace Questions
                          * 
                          * ****/
                         if (string.IsNullOrEmpty(text)) continue;//空行退出
-
-                        if (regChapter.IsMatch(text))//章标题
+                        if (regPain.IsMatch(text))//处理第？篇的问题
+                        {
+                            expstar = false;
+                            chapter = string.Empty;
+                            node = string.Empty;
+                            chapterID = 0;
+                            nodeID = 0;
+                            questionID = 0;
+                            subject = regPain.Replace(text, "").Trim();
+                        }
+                        else if (regChapter.IsMatch(text))//章标题
                         {
                             expstar = false;
                             chapter = text;
@@ -120,7 +137,7 @@ namespace Questions
                                 doc.Paragraphs[k].Range.Select();
                                 string newtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k].Range.Text, "").Trim();
                                 if (string.IsNullOrEmpty(newtext)) continue;
-                                if (isQuestion(newtext))
+                                if (is4ChooseQuestion(newtext))
                                 {
                                     questionrow.Add(k);
                                 }
@@ -142,7 +159,7 @@ namespace Questions
                                     {
                                         questionID++;
                                         questionAllID++;
-                                        question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, regA, regNO, regxhx, new Regex("^[0-9]+", RegexOptions.IgnoreCase).Replace(doc.Paragraphs[n].Range.Text, questionID.ToString()));
+                                        question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, new Regex("^[0-9]+", RegexOptions.IgnoreCase).Replace(doc.Paragraphs[n].Range.Text, questionID.ToString()));
                                         printQuesiton(question);
                                         list.Add(question);
                                     }
@@ -162,17 +179,31 @@ namespace Questions
                                 {
                                     questionID++;
                                     questionAllID++;
-                                    Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, regA, regNO, regxhx, text);
+                                    Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
                                     printQuesiton(question);
                                     list.Add(question);
                                 }
                                 else if (regA.Split(text).Length == 4)//有三个选项
                                 {
-                                    consolewrite("三个选项试题：", text);
+                                    questionID++;
+                                    questionAllID++;
+                                    text += "D、";
+                                    Question question = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
+                                    printQuesiton(question);
+                                    list.Add(question);
+                                }
+                                else if (regA.Split(text).Length == 1)//没有选项的
+                                {
+                                    questionID++;
+                                    questionAllID++;
+                                    Panduan panduan = TextToPandan(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, string.Empty, text);
+                                    printQuesiton(panduan);
+                                    listpanduan.Add(panduan);
+
                                 }
                                 else//其它， 不知道是什么情况，有可能是判断题
                                 {
-                                    // writer.WriteLine("其他：数字开头，不是三个/四个选项- " + regA.Split(text).Length + "_" + text);
+
                                     consolewrite("其他：数字开头，不是三个/四个选项 ", regA.Split(text).Length + "_" + text);
                                 }
                             }
@@ -249,8 +280,13 @@ namespace Questions
                     Thread.Sleep(1000);
                     Console.WriteLine("文件关闭成功，开始将试题写入到表格及数据库中……");
                     questiontoexcel(list, "d://" + str + ".xls");
+                    if (listpanduan.Count > 0)
+                    {
+                        panduantoexcel(listpanduan, "d://" + str + ".xls");
+                    }
                     Console.WriteLine("试题写入完成，地址：D://{0}.xls", str);
                     list.Clear();
+                    listpanduan.Clear();
                 }
                 catch (Exception ex)
                 {
@@ -266,8 +302,33 @@ namespace Questions
             consolewrite("所有写入完成", "");
         }
 
+
+
+        private static void panduantoexcel(List<Panduan> listpanduan, string p)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
-        /// 将一行文本填充成一个试题模型
+        /// 将一行文本填充成一个判断题模型
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="chapter"></param>
+        /// <param name="node"></param>
+        /// <param name="questionAllID"></param>
+        /// <param name="questionID"></param>
+        /// <param name="chapterID"></param>
+        /// <param name="nodeID"></param>
+        /// <param name="remark"></param>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Panduan TextToPandan(string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, string remark, string text)
+        {
+            Panduan panduan = new Panduan();
+            return panduan;
+        }
+        /// <summary>
+        /// 将一行文本填充成一个选项题的试题模型
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="chapter"></param>
@@ -282,7 +343,7 @@ namespace Questions
         /// <param name="regxhx"></param>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static Question TextToQuestionModel(string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, string remark, Regex regA, Regex regNO, Regex regxhx, string text)
+        public static Question TextToQuestionModel(string subject, string chapter, string node, int questionAllID, int questionID, int chapterID, int nodeID, string remark, string text)
         {
             string[] strSplit = regA.Split(new Regex("\\r\\a").Replace(text, "").Trim());
             if (strSplit.Length != 5)
@@ -331,7 +392,7 @@ namespace Questions
             remark = sb.ToString();
             for (int j = questionrownum, k = 0; j < questionrownum + 4; j++, k++)
             {
-                question[k] = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, regA, regNO, regxhx, doc.Paragraphs[j].Range.Text);
+                question[k] = TextToQuestionModel(subject, chapter, node, questionAllID, questionID, chapterID, nodeID, remark, doc.Paragraphs[j].Range.Text);
             }
             return question;
 
@@ -342,7 +403,7 @@ namespace Questions
         /// 打印出试题对象
         /// </summary>
         /// <param name="question">试题对象</param>
-        public static void printQuesiton(Question question)
+        public static void printQuesiton(object question)
         {
             PropertyInfo[] proper = question.GetType().GetProperties();
             for (int i = 0; i < question.GetType().GetProperties().Length; i++)
@@ -396,14 +457,14 @@ namespace Questions
                         c.SetCellValue(q.GetType().GetProperties()[i].GetValue(q).ToString());
                     }
                 }
-                Console.WriteLine("第{0}条数据写入表格成功，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
+                Console.WriteLine("第{0}条数据写入表格成功，总计：{1}条，剩余：{2}条", j + 1, list.Count, list.Count - j - 1);
                 if (insertQuestionTODB(q, "Question", "ChooseQuestion") == 1)
                 {
-                    Console.WriteLine("第{0}条数据写入数据库成功，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
+                    Console.WriteLine("第{0}条数据写入数据库成功，总计：{1}条，剩余：{2}条", j + 1, list.Count, list.Count - j - 1);
                 }
                 else
                 {
-                    Console.WriteLine("第{0}条数据插入数据库错误，总计：{1}条，剩余：{2}条", j, list.Count, list.Count - j);
+                    Console.WriteLine("第{0}条数据插入数据库错误，总计：{1}条，剩余：{2}条", j + 1, list.Count, list.Count - j - 1);
                     Console.ReadLine();
                 }
                 Console.WriteLine();
@@ -463,18 +524,30 @@ namespace Questions
         /// <param name="text"></param>
         /// <param name="reg"></param>
         /// <returns></returns>
-        public static Boolean isQuestion(string text)
+        public static Boolean is4ChooseQuestion(string text)
         {
             Boolean istrue = true;
-            Regex regA = new Regex("[ABCDabcd]{1}[\\.|、]", RegexOptions.IgnoreCase);//A|B|C|D
-            Regex regNO = new Regex("^[0-9]+[\\.|、]", RegexOptions.IgnoreCase);//以数字开头  题干 
-            Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
             if (!regNO.IsMatch(text) || !regxhx.IsMatch(text) || regA.Split(text).Length != 5)
             {
                 istrue = false;
                 //consolewrite("转换成试题模型不成功",text);
             }
             return istrue;
+        }
+
+        /// <summary>
+        /// 判断一行文本是否是判断题的形式（1、数字开头，2、有下划线，3、按照A|B|C|D分割后，长度为1）
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Boolean isPanduan(string text)
+        {
+            Boolean isTrue = true;
+            if (!regNO.IsMatch(text) || !regxhx.IsMatch(text) || regA.Split(text).Length != 1)
+            {
+                isTrue = false;
+            }
+            return isTrue;
         }
 
         /// <summary>

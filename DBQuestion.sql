@@ -40,7 +40,7 @@ create table ChooseQuestion-----选择题试题表
 		Answer int not null check(Answer in(0,1,2,3,4)),-----参考答案
 		Explain varchar(max) null,-----解析
 		ImageAddress varchar(8000) null,----图片地址
-		remark varchar(8000) null----备注
+		Remark varchar(8000) null----备注
 )
 if exists (select*from sysobjects where name='PanduanQuestion')
 drop table PanduanQuestion
@@ -58,5 +58,5 @@ create table PanduanQuestion----判断题试题表
 		Answer bit not null,-----参考答案
 		Explain varchar(max) null,-----解析
 		ImageAddress varchar(8000) null,----图片地址
-		remark varchar(8000) null----备注
+		Remark varchar(8000) null----备注
 )

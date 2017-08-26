@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Data.SqlClient;
 using System.Text;
 
+
 namespace Questions
 {
     class Program
@@ -39,8 +40,13 @@ namespace Questions
             Regex regglt = new Regex(@"^passage\s*[0-9]{1,4}");//关联题，以passage开头+数字
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
             List<Question> list = new List<Question>();
+
+            DateTime[] timestar = new DateTime[documents.Length];//记录每一科的开始时间
+            DateTime[] timeend = new DateTime[documents.Length];//记录每一科的结束时间
+
             for (int j = 0; j < documents.Length; j++) //(string str in documents)
             {
+                timestar[j] = DateTime.Now;
                 questionAllID = 0;
                 questionID = 0;
                 chapterID = 0;
@@ -279,12 +285,32 @@ namespace Questions
                 finally
                 {
                     writer.Flush();
+                    timeend[j] = DateTime.Now;
                 }
             }//所有试题结束
             writer.Close();
+            printDatetime(subjects, timestar, timeend);
             consolewrite("所有写入完成", "");
+
         }
 
+        /// <summary>
+        /// 打印出每个科目的用时
+        /// </summary>
+        /// <param name="subjects"></param>
+        /// <param name="star"></param>
+        /// <param name="end"></param>
+        public static void printDatetime(string[] subjects, DateTime[] star, DateTime[] end)
+        {
+            Console.WriteLine("各科目的用时情况统计如下所示：");
+            Console.WriteLine("总用时：{0}", (end[subjects.Length - 1] - star[0]).ToString());
+            for (int i = 0; i < subjects.Length; i++)
+            {
+                Console.WriteLine("处理 {0} 从 {1} 开始 ——至 {2} 结束，共用时 {3} 。", subjects[i], star[i], end[i], (end[i] - star[i]).ToString());
+            }
+            
+
+        }
         private static void proceduQuestion(string subject, string chapter, string node, ref int questionAllID, ref int questionID, int chapterID, int nodeID, List<Question> list, string text)
         {
             questionID++;

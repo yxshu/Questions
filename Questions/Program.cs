@@ -308,9 +308,20 @@ namespace Questions
             {
                 Console.WriteLine("处理 {0} 从 {1} 开始 ——至 {2} 结束，共用时 {3} 。", subjects[i], star[i], end[i], (end[i] - star[i]).ToString());
             }
-            
-
         }
+
+        /// <summary>
+        /// 处理试题
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="chapter"></param>
+        /// <param name="node"></param>
+        /// <param name="questionAllID"></param>
+        /// <param name="questionID"></param>
+        /// <param name="chapterID"></param>
+        /// <param name="nodeID"></param>
+        /// <param name="list"></param>
+        /// <param name="text"></param>
         private static void proceduQuestion(string subject, string chapter, string node, ref int questionAllID, ref int questionID, int chapterID, int nodeID, List<Question> list, string text)
         {
             questionID++;

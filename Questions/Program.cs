@@ -21,15 +21,16 @@ namespace Questions
         static Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
         static void Main(string[] args)
         {
-            string[] documents = new string[] { "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx", "QuestionLibraries/avoidcollision-wufei.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx" };
-            string[] subjects = new string[] { string.Empty, "航海学(航海地文、天文)", "船舶管理", "船舶结构与货运", "航海英语", "船舶操纵与避碰", "航海学(航海仪器)", "航海学(航海气象与海洋学)" };//
+            string[] documents = new string[] {/* "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/instruction-yuxiangshu.docx",*/ "QuestionLibraries/english-xiangwei.docx"/*, "QuestionLibraries/avoidcollision-wufei.docx"*/ };
+            string[] subjects = new string[] { /*"航海学(航海仪器)", "航海学(航海气象与海洋学)", "海船船员培训合格证", "航海学(航海地文、天文)", "船舶管理", "船舶结构与货运", */"航海英语"/*, "船舶操纵与避碰" */};
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题
             string node = string.Empty;//节标题
             string gltmark = "$关联题$";//关联题的标记，放在question.remark的开头，用于后期识别
-            int questionAllID, questionID, chapterID, nodeID;//试题的总序号，每章/节内的序号，章序号，节序号
 
+            int numForAll = 0, questionAllID = 0, questionID = 0, chapterID = 0, nodeID = 0;//所有试题的总序号，每本试题的总序号，每章/节内的序号，章序号，节序号
+            int[] numForDocument = new int[documents.Length];
 
             Regex regexpstar = new Regex("^参考答案|答案解析");//参考答案开头
             Regex regexp = new Regex("^[0-9]+[\\.|、][ABCDabcd]{1}[\\.|、|。]?");//解释
@@ -38,7 +39,9 @@ namespace Questions
             Regex regNode = new Regex("^第[一二三四五六七八九十]{1,3}节", RegexOptions.IgnoreCase);//节标题
 
             Regex regglt = new Regex(@"^passage\s*[0-9]{1,4}");//关联题，以passage开头+数字
+            string initpath = @"C:\Users\yxshu\Documents\GitHub\Questions\";
             StreamWriter writer = new StreamWriter("D://error.txt", true, System.Text.Encoding.Default, 1 * 1024);
+            StreamWriter log = new StreamWriter(initpath + "\\Questions\\log.txt", true, System.Text.Encoding.Default);
             List<Question> list = new List<Question>();
 
             DateTime[] timestar = new DateTime[documents.Length];//记录每一科的开始时间
@@ -58,7 +61,6 @@ namespace Questions
                 {
                     subject = subjects[j];
                 }
-                string initpath = @"C:\Users\yxshu\Documents\GitHub\Questions\";
                 string path = initpath + str;//C:\Users\yxshu\Documents\GitHub\Questions
                 Console.WriteLine(path);
                 writer.WriteLine(path);
@@ -141,12 +143,12 @@ namespace Questions
                             {
                                 doc.Paragraphs[k].Range.Select();
                                 string newtext = new Regex("\\r\\a").Replace(doc.Paragraphs[k].Range.Text, "").Trim();
-                                if (string.IsNullOrEmpty(newtext)) continue;
-                                if (is4ChooseQuestion(newtext))
+                                if (string.IsNullOrEmpty(newtext)) continue;//空行退出
+                                if (is4ChooseQuestion(newtext))//是符合条件的选项
                                 {
                                     questionrow.Add(k);
                                 }
-                                else if (regglt.IsMatch(newtext.ToLower()) || regexp.IsMatch(newtext))
+                                else if (regglt.IsMatch(newtext.ToLower()) || regexp.IsMatch(newtext))//到达下一个关联题部分，本次关联题结束
                                 {
                                     if (regexp.IsMatch(newtext))
                                     {
@@ -159,7 +161,8 @@ namespace Questions
                                     {
                                         sb.AppendLine(new Regex("\\r\\a").Replace(doc.Paragraphs[x].Range.Text, "").Trim());
                                     }
-                                    remark = gltmark + sb.ToString();
+                                    TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);//给关联题加上一个时间戳
+                                    remark = gltmark + "&" + Convert.ToInt64(ts.TotalMilliseconds).ToString() + "&" + sb.ToString();
                                     foreach (int n in questionrow)
                                     {
                                         questionID++;
@@ -287,27 +290,55 @@ namespace Questions
                     writer.Flush();
                     timeend[j] = DateTime.Now;
                 }
+                numForDocument[j] = questionAllID;
+                numForAll += questionAllID;
             }//所有试题结束
             writer.Close();
-            printDatetime(subjects, timestar, timeend);
+            printDatetime(subjects, timestar, timeend, log, numForAll, numForDocument);
             consolewrite("所有写入完成", "");
 
         }
 
         /// <summary>
-        /// 打印出每个科目的用时
+        /// 打印出统计信息
         /// </summary>
         /// <param name="subjects"></param>
         /// <param name="star"></param>
         /// <param name="end"></param>
-        public static void printDatetime(string[] subjects, DateTime[] star, DateTime[] end)
+        public static void printDatetime(string[] subjects, DateTime[] star, DateTime[] end, StreamWriter writer, int allnum, int[] numForDocument)
         {
-            Console.WriteLine("各科目的用时情况统计如下所示：");
-            Console.WriteLine("总用时：{0}", (end[subjects.Length - 1] - star[0]).ToString());
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.AppendLine(string.Format("总计完成的试题数为：{0}", allnum));
+            sb.AppendLine();
+            sb.AppendLine("各科目的用时情况统计如下所示：");
+            sb.AppendLine();
+            sb.AppendLine(string.Format("总用时：{0}", (end[subjects.Length - 1] - star[0]).ToString()));
+            sb.AppendLine();
             for (int i = 0; i < subjects.Length; i++)
             {
-                Console.WriteLine("处理 {0} 从 {1} 开始 ——至 {2} 结束，共用时 {3} 。", subjects[i], star[i], end[i], (end[i] - star[i]).ToString());
+                sb.AppendLine(string.Format("其中 {0} 试题数为:{1}", subjects[i], numForDocument[i]));
+                sb.AppendLine(string.Format("处理 {0} 从 {1} 开始 ——至 {2} 结束，共用时 {3} 。", subjects[i], star[i], end[i], (end[i] - star[i]).ToString()));
+                sb.AppendLine();
             }
+            string message = sb.ToString();
+            try
+            {
+                writer.Write(message); writer.Flush();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                writer.Close();
+            }
+            Console.WriteLine(message);
+
+
         }
 
         /// <summary>

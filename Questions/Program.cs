@@ -21,8 +21,8 @@ namespace Questions
         static Regex regxhx = new Regex("[_]{3,10}", RegexOptions.IgnoreCase);//下划线
         static void Main(string[] args)
         {
-            string[] documents = new string[] {"QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx", "QuestionLibraries/avoidcollision-wufei.docx" };
-            string[] subjects = new string[] { "航海学(航海仪器)", "航海学(航海气象与海洋学)", "海船船员培训合格证", "航海学(航海地文、天文)", "船舶管理", "船舶结构与货运", "航海英语", "船舶操纵与避碰" };
+            string[] documents = new string[] { "QuestionLibraries/certificate-yuxiangshu.docx", "QuestionLibraries/equipment-hedetao.docx", "QuestionLibraries/ocean-hedetao.docx", "QuestionLibraries/navigation-hedetao.docx", "QuestionLibraries/management-lizhite.docx", "QuestionLibraries/instruction-yuxiangshu.docx", "QuestionLibraries/english-xiangwei.docx", "QuestionLibraries/avoidcollision-wufei.docx" };
+            string[] subjects = new string[] { "海船船员培训合格证", "航海学(航海仪器)", "航海学(航海气象与海洋学)", "航海学(航海地文、天文)", "船舶管理", "船舶结构与货运", "航海英语", "船舶操纵与避碰" };
             bool expstar = false;//解析开始标记
             string subject = string.Empty;
             string chapter = string.Empty;//章标题

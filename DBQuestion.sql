@@ -25,7 +25,7 @@ drop table ChooseQuestion
 create table ChooseQuestion-----选择题试题表
 	(
 	Id int identity(1,1)primary key,---自动编号
-		AllID int not null,-----来自试题的自动编号
+		AllID int not null,-----来自试题的自动编号(每一科复位)
 		C_N_Id varchar(1000) not null,-----章节编号+allid
 		SN int  not null,-----试题原编号
 		SNID varchar(1000)  not null,-----章节编号+SN
@@ -42,6 +42,7 @@ create table ChooseQuestion-----选择题试题表
 		ImageAddress varchar(8000) null,----图片地址
 		Remark varchar(8000) null----备注
 )
+
 if exists (select*from sysobjects where name='PanduanQuestion')
 drop table PanduanQuestion
 create table PanduanQuestion----判断题试题表
